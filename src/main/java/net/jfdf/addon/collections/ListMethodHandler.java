@@ -84,47 +84,32 @@ class ListMethodHandler {
                }
 
                index = NumberMath.add((INumber)((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue(), (new Number()).Set(2));
-               InstructionData nextInsn = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
-               if (nextInsn.instructionOpcode != 87) {
-                  String getValueDescriptor = "Ljava/lang/Object;";
-                  if (nextInsn.instructionOpcode == 192) {
-                     getValueDescriptor = ((TypeInstructionData)nextInsn).type;
-                     if (!getValueDescriptor.startsWith("[")) {
-                        getValueDescriptor = "L" + getValueDescriptor + ";";
+               InstructionData nextInsn2 = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+               if (nextInsn2.instructionOpcode != 87) {
+                  String getValueDescriptor2 = "Ljava/lang/Object;";
+                  if (nextInsn2.instructionOpcode == 192) {
+                     getValueDescriptor2 = ((TypeInstructionData)nextInsn2).type;
+                     if (!getValueDescriptor2.startsWith("[")) {
+                        getValueDescriptor2 = "L" + getValueDescriptor2 + ";";
                      }
 
-                     switch (getValueDescriptor) {
-                        case "Ljava/lang/Boolean;":
-                           var10000 = "Z";
-                           break;
-                        case "Ljava/lang/Byte;":
-                           var10000 = "B";
-                           break;
-                        case "Ljava/lang/Short;":
-                           var10000 = "S";
-                           break;
-                        case "Ljava/lang/Integer;":
-                           var10000 = "I";
-                           break;
-                        case "Ljava/lang/Long;":
-                           var10000 = "J";
-                           break;
-                        case "Ljava/lang/Float;":
-                           var10000 = "F";
-                           break;
-                        case "Ljava/lang/Double;":
-                           var10000 = "D";
-                           break;
-                        default:
-                           var10000 = getValueDescriptor;
-                     }
+                      var10000 = switch (getValueDescriptor2) {
+                          case "Ljava/lang/Boolean;" -> "Z";
+                          case "Ljava/lang/Byte;" -> "B";
+                          case "Ljava/lang/Short;" -> "S";
+                          case "Ljava/lang/Integer;" -> "I";
+                          case "Ljava/lang/Long;" -> "J";
+                          case "Ljava/lang/Float;" -> "F";
+                          case "Ljava/lang/Double;" -> "D";
+                          default -> getValueDescriptor2;
+                      };
 
-                     getValueDescriptor = var10000;
+                     getValueDescriptor2 = var10000;
                   }
 
-                  Variable variable = CompilerAddons.getTempVariable();
-                  VariableControl.GetListValue(variable, reference, index);
-                  stack.add(new VariableStackValue(getValueDescriptor, variable.getName()));
+                  Variable variable2 = CompilerAddons.getTempVariable();
+                  VariableControl.GetListValue(variable2, reference, index);
+                  stack.add(new VariableStackValue(getValueDescriptor2, variable2.getName()));
                } else {
                   References.decrementRefCount(NumberMath.listValue(reference, index));
                   stack.add(new NumberStackValue(0));
@@ -172,10 +157,10 @@ class ListMethodHandler {
                index = NumberMath.add((INumber)((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue(), (new Number()).Set(2));
                variable = CompilerAddons.getTempVariable();
                VariableControl.GetListValue(variable, reference, index);
-               nextInsn = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+               nextInsn2 = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
                getValueDescriptor = "Ljava/lang/Object;";
-               if (nextInsn.instructionOpcode == 192) {
-                  getValueDescriptor = ((TypeInstructionData)nextInsn).type;
+               if (nextInsn2.instructionOpcode == 192) {
+                  getValueDescriptor = ((TypeInstructionData)nextInsn2).type;
                   if (!getValueDescriptor.startsWith("[")) {
                      getValueDescriptor = "L" + getValueDescriptor + ";";
                   }
@@ -214,12 +199,12 @@ class ListMethodHandler {
                break;
             case "set(ILjava/lang/Object;)Ljava/lang/Object;":
                index = NumberMath.add((INumber)((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue(), (new Number()).Set(2));
-               IStackValue value = (IStackValue)stack.remove(stack.size() - 1);
-               nextInsn = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
-               if (nextInsn.instructionOpcode != 87) {
+               IStackValue value2 = (IStackValue)stack.remove(stack.size() - 1);
+               nextInsn2 = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+               if (nextInsn2.instructionOpcode != 87) {
                   getValueDescriptor = "Ljava/lang/Object;";
-                  if (nextInsn.instructionOpcode == 192) {
-                     getValueDescriptor = ((TypeInstructionData)nextInsn).type;
+                  if (nextInsn2.instructionOpcode == 192) {
+                     getValueDescriptor = ((TypeInstructionData)nextInsn2).type;
                      if (!getValueDescriptor.startsWith("[")) {
                         getValueDescriptor = "L" + getValueDescriptor + ";";
                      }
@@ -253,16 +238,16 @@ class ListMethodHandler {
                      getValueDescriptor = var10000;
                   }
 
-                  Variable variable = CompilerAddons.getTempVariable();
-                  VariableControl.GetListValue(variable, reference, index);
-                  stack.add(new VariableStackValue(getValueDescriptor, variable.getName()));
+                  Variable variable2 = CompilerAddons.getTempVariable();
+                  VariableControl.GetListValue(variable2, reference, index);
+                  stack.add(new VariableStackValue(getValueDescriptor, variable2.getName()));
                } else {
                   References.decrementRefCount(NumberMath.listValue(reference, index));
                   stack.add(new NumberStackValue(0));
                }
 
-               VariableControl.SetListValue(reference, index, value.getTransformedValue());
-               ReferenceUtils.incrementIfReference(value.getDescriptor(), value.getTransformedValue());
+               VariableControl.SetListValue(reference, index, value2.getTransformedValue());
+               ReferenceUtils.incrementIfReference(value2.getDescriptor(), value2.getTransformedValue());
                break;
             case "iterator()Ljava/util/Iterator;":
                iteratorVariable = CompilerAddons.getTempVariable();

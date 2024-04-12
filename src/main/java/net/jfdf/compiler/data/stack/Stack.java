@@ -6,8 +6,8 @@ import java.util.List;
 import net.jfdf.compiler.util.ReferenceUtils;
 import net.jfdf.jfdf.values.Variable;
 
-public class Stack extends ArrayList {
-   private final List tempValueUses = new ArrayList();
+public class Stack extends ArrayList<IStackValue> {
+   private final List tempValueUses = new ArrayList<IStackValue>();
 
    public boolean add(IStackValue stackValue) {
       this.onAddElement(stackValue);
@@ -15,13 +15,13 @@ public class Stack extends ArrayList {
    }
 
    public IStackValue remove(int index) {
-      IStackValue removedValue = (IStackValue)super.remove(index);
+      IStackValue removedValue = super.remove(index);
       this.onRemoveElement(removedValue);
       return removedValue;
    }
 
    public IStackValue set(int index, IStackValue element) {
-      IStackValue removedValue = (IStackValue)super.set(index, element);
+      IStackValue removedValue = super.set(index, element);
       this.onRemoveElement(removedValue);
       this.onAddElement(element);
       return removedValue;
@@ -51,16 +51,15 @@ public class Stack extends ArrayList {
          String variableName = ((Variable)element.getTransformedValue()).getName();
          if (variableName.startsWith("_jco")) {
             boolean tempValueDataFound = false;
-            Iterator var4 = this.tempValueUses.iterator();
 
-            while(var4.hasNext()) {
-               TempValueData tempValueData = (TempValueData)var4.next();
-               if (tempValueData.variable.getName().equals(variableName)) {
-                  ++tempValueData.uses;
-                  tempValueDataFound = true;
-                  break;
-               }
-            }
+             for (Object tempValueUs : this.tempValueUses) {
+                 TempValueData tempValueData = (TempValueData) tempValueUs;
+                 if (tempValueData.variable.getName().equals(variableName)) {
+                     ++tempValueData.uses;
+                     tempValueDataFound = true;
+                     break;
+                 }
+             }
 
             if (!tempValueDataFound) {
                this.tempValueUses.add(new TempValueData(element));

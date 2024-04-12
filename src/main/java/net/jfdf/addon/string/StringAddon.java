@@ -5,6 +5,7 @@ import net.jfdf.compiler.addon.CompilerAddons;
 import net.jfdf.compiler.addon.ICompilerAddon;
 import net.jfdf.compiler.addon.IfHandler;
 import net.jfdf.compiler.data.stack.IStackValue;
+import net.jfdf.compiler.data.stack.Stack;
 import net.jfdf.compiler.data.stack.TextStackValue;
 import net.jfdf.compiler.data.stack.VariableStackValue;
 import net.jfdf.jfdf.blocks.BracketBlock;
@@ -25,7 +26,7 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 
 public class StringAddon implements ICompilerAddon {
-   public boolean onInitClass(String type, List stack) {
+   public boolean onInitClass(String type, Stack stack) {
       if (type.equals("java/lang/StringBuilder")) {
          Variable stringBuilder = CompilerAddons.getTempVariable();
          Variable reference = new Variable("_jfdfR%var(" + stringBuilder.getName() + ")", Variable.Scope.NORMAL);
@@ -40,7 +41,7 @@ public class StringAddon implements ICompilerAddon {
       }
    }
 
-   public boolean onInvokeConstructor(String type, String descriptor, List stack) {
+   public boolean onInvokeConstructor(String type, String descriptor, Stack stack) {
       if (type.equals("java/lang/StringBuilder")) {
          switch (descriptor) {
             case "()V":
@@ -62,7 +63,7 @@ public class StringAddon implements ICompilerAddon {
       }
    }
 
-   public boolean onInvokeDynamic(String name, String descriptor, Handle methodHandle, Object[] methodArgs, List stack) {
+   public boolean onInvokeDynamic(String name, String descriptor, Handle methodHandle, Object[] methodArgs, Stack stack) {
       if (name.equals("makeConcatWithConstants") && methodHandle.getOwner().equals("java/lang/invoke/StringConcatFactory")) {
          String result = (String)methodArgs[0];
          int argsCount = Type.getArgumentTypes(descriptor).length;
@@ -81,7 +82,7 @@ public class StringAddon implements ICompilerAddon {
       }
    }
 
-   public boolean onInvokeMember(String owner, String name, String descriptor, List stack) {
+   public boolean onInvokeMember(String owner, String name, String descriptor, Stack stack) {
       Variable stringBuilder;
       Variable builderReference;
       switch (owner) {
@@ -149,30 +150,29 @@ public class StringAddon implements ICompilerAddon {
                case "matches(Ljava/lang/String;)Z":
                case "startsWith(Ljava/lang/String;)Z":
                case "endsWith(Ljava/lang/String;)Z":
-                  IfStringStackValue var10001 = new IfStringStackValue;
-                  IfStringStackValue.IfType var10003;
+                  IfStringStackValue.IfType ifType;
                   switch (name) {
                      case "equalsIgnoreCase":
-                        var10003 = IfStringStackValue.IfType.EQUALS_IGNORE_CASE;
+                        ifType = IfStringStackValue.IfType.EQUALS_IGNORE_CASE;
                         break;
                      case "matches":
-                        var10003 = IfStringStackValue.IfType.EQUALS_REGEX;
+                        ifType = IfStringStackValue.IfType.EQUALS_REGEX;
                         break;
                      case "contains":
-                        var10003 = IfStringStackValue.IfType.CONTAINS;
+                        ifType = IfStringStackValue.IfType.CONTAINS;
                         break;
                      case "startsWith":
-                        var10003 = IfStringStackValue.IfType.STARTS_WITH;
+                        ifType = IfStringStackValue.IfType.STARTS_WITH;
                         break;
                      case "endsWith":
-                        var10003 = IfStringStackValue.IfType.ENDS_WITH;
+                        ifType = IfStringStackValue.IfType.ENDS_WITH;
                         break;
                      default:
                         throw new IllegalStateException("Unexpected value: " + name);
                   }
 
-                  var10001.<init>(var10003, new IStackValue[]{(IStackValue)stack.remove(stack.size() - 2), (IStackValue)stack.remove(stack.size() - 1)});
-                  stack.add(var10001);
+                  IfStringStackValue ifStringStackValue = new IfStringStackValue(ifType, new IStackValue[]{(IStackValue)stack.remove(stack.size() - 2), (IStackValue)stack.remove(stack.size() - 1)});
+                  stack.add(ifStringStackValue);
                   return true;
                default:
                   throw new UnsupportedOperationException("String." + name + descriptor + " is not supported !");
@@ -180,10 +180,10 @@ public class StringAddon implements ICompilerAddon {
          case "java/lang/StringBuilder":
             if (name.equals("append") && descriptor.matches("\\(([IJDFZ]|Ljava/lang/String;)\\)Ljava/lang/StringBuilder;")) {
                IStackValue builderValue = (IStackValue)stack.get(stack.size() - 2);
-               Variable stringBuilder = (Variable)builderValue.getTransformedValue();
-               stringBuilder = new Variable("_jfdfR%var(" + stringBuilder.getName() + ")", Variable.Scope.NORMAL);
-               VariableControl.AppendValue(stringBuilder, ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue());
-               stack.add(new VariableStackValue("Ljava/lang/StringBuilder;", stringBuilder.getName()));
+               Variable stringBuilder2 = (Variable)builderValue.getTransformedValue();
+               stringBuilder2 = new Variable("_jfdfR%var(" + stringBuilder2.getName() + ")", Variable.Scope.NORMAL);
+               VariableControl.AppendValue(stringBuilder2, ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue());
+               stack.add(new VariableStackValue("Ljava/lang/StringBuilder;", stringBuilder2.getName()));
             } else {
                if (!name.equals("toString")) {
                   throw new UnsupportedOperationException("StringBuilder." + name + descriptor + " is not supported !");
@@ -206,7 +206,7 @@ public class StringAddon implements ICompilerAddon {
       return true;
    }
 
-   public boolean onInvokeStatic(String owner, String name, String descriptor, List stack) {
+   public boolean onInvokeStatic(String owner, String name, String descriptor, Stack stack) {
       if (owner.equals("java/lang/String")) {
          if (name.equals("join") && descriptor.equals("(Ljava/lang/CharSequence;[Ljava/lang/CharSequence;)Ljava/lang/String;")) {
             Variable result = CompilerAddons.getTempVariable();
@@ -231,7 +231,7 @@ public class StringAddon implements ICompilerAddon {
       }
    }
 
-   public IfHandler onIf(String defaultType, final boolean invert, List stack) {
+   public IfHandler onIf(String defaultType, final boolean invert, Stack stack) {
       final IStackValue ifValue = (IStackValue)stack.get(stack.size() - 1);
       if (ifValue instanceof IfStringStackValue) {
          IfStringStackValue ifStringData = (IfStringStackValue)ifValue;

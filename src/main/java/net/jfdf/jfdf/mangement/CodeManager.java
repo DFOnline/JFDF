@@ -49,9 +49,9 @@ public class CodeManager {
       Variable variable;
       do {
          if (!var3.hasNext()) {
-            Variable variable = new Variable(variableName, scope);
-            this.variables.add(variable);
-            return variable;
+            Variable variable2 = new Variable(variableName, scope);
+            this.variables.add(variable2);
+            return variable2;
          }
 
          variable = (Variable)var3.next();
@@ -228,13 +228,13 @@ public class CodeManager {
          for(i = 0; i < checksumFunctions.size(); i += 26) {
             if (i == 0) {
                VariableControl.CreateList(new Variable("_jco0", Variable.Scope.LOCAL), (CodeValue[])checksumFunctions.subList(i, Math.min(i + 26, checksumFunctions.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
             } else {
                VariableControl.AppendValue(new Variable("_jco0", Variable.Scope.LOCAL), (CodeValue[])checksumFunctions.subList(i, Math.min(i + 26, checksumFunctions.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
@@ -244,13 +244,13 @@ public class CodeManager {
          for(i = 0; i < checksumValues.size(); i += 26) {
             if (i == 0) {
                VariableControl.CreateList(new Variable("_jco1", Variable.Scope.LOCAL), (CodeValue[])checksumValues.subList(i, Math.min(i + 26, checksumValues.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
             } else {
                VariableControl.AppendValue(new Variable("_jco1", Variable.Scope.LOCAL), (CodeValue[])checksumValues.subList(i, Math.min(i + 26, checksumValues.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
@@ -433,13 +433,13 @@ public class CodeManager {
          for(i = 0; i < checksumFunctions.size(); i += 26) {
             if (i == 0) {
                VariableControl.CreateList(new Variable("_jco0", Variable.Scope.LOCAL), (CodeValue[])checksumFunctions.subList(i, Math.min(i + 26, checksumFunctions.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
             } else {
                VariableControl.AppendValue(new Variable("_jco0", Variable.Scope.LOCAL), (CodeValue[])checksumFunctions.subList(i, Math.min(i + 26, checksumFunctions.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
@@ -449,13 +449,13 @@ public class CodeManager {
          for(i = 0; i < checksumValues.size(); i += 26) {
             if (i == 0) {
                VariableControl.CreateList(new Variable("_jco1", Variable.Scope.LOCAL), (CodeValue[])checksumValues.subList(i, Math.min(i + 26, checksumValues.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));
             } else {
                VariableControl.AppendValue(new Variable("_jco1", Variable.Scope.LOCAL), (CodeValue[])checksumValues.subList(i, Math.min(i + 26, checksumValues.size())).stream().map((s) -> {
-                  return (new Text()).Set(s);
+                  return (new Text()).Set((String) s);
                }).toArray((x$0) -> {
                   return new Text[x$0];
                }));

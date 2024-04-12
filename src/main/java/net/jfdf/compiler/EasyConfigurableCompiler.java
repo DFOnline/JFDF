@@ -62,26 +62,17 @@ public abstract class EasyConfigurableCompiler {
                Map.Entry lineData = (Map.Entry)var5.next();
                CodeHeader lineStarter = (CodeHeader)lineData.getKey();
                String code = (String)lineData.getValue();
-               LineStarterType var10000;
-               switch (lineStarter.getClass().getSimpleName()) {
-                  case "PlayerEventBlock":
-                     var10000 = EasyConfigurableCompiler.LineStarterType.PLAYER_EVENT;
-                     break;
-                  case "EntityEventBlock":
-                     var10000 = EasyConfigurableCompiler.LineStarterType.ENTITY_EVENT;
-                     break;
-                  case "FunctionBlock":
-                     var10000 = EasyConfigurableCompiler.LineStarterType.FUNCTION;
-                     break;
-                  case "ProcessBlock":
-                     var10000 = EasyConfigurableCompiler.LineStarterType.PROCESS;
-                     break;
-                  default:
-                     throw new IllegalStateException("Unknown line starter class: " + lineStarter.getClass().getName());
-               }
+               LineStarterType var10000 = switch (lineStarter.getClass().getSimpleName()) {
+                   case "PlayerEventBlock" -> LineStarterType.PLAYER_EVENT;
+                   case "EntityEventBlock" -> LineStarterType.ENTITY_EVENT;
+                   case "FunctionBlock" -> LineStarterType.FUNCTION;
+                   case "ProcessBlock" -> LineStarterType.PROCESS;
+                   default ->
+                           throw new IllegalStateException("Unknown line starter class: " + lineStarter.getClass().getName());
+               };
 
-               LineStarterType lineStarterType = var10000;
-               name = lineStarter.getTemplateName().split(" ")[2];
+                LineStarterType lineStarterType = var10000;
+               String name = lineStarter.getTemplateName().split(" ")[2];
                if (this.shouldSendLine(lineStarterType, name)) {
                   String sendDataJson = "{\"type\":\"template\",\"source\":\"§6§lJFDF » §e" + senderName + "\",\"data\":\"{\\\"name\\\":\\\"" + lineStarter.getTemplateNameWithColors().replace("\"", "\\\\\"") + "\\\",\\\"data\\\":\\\"" + code + "\\\"}\"}";
                   OutputStream stream = socket.getOutputStream();

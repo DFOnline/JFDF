@@ -103,11 +103,13 @@ public final class JFDFCompiler {
 
             for(Class checkClass = compiledClass; checkClass != Object.class; checkClass = checkClass.getSuperclass()) {
                Text checkClassInternalName = (new Text()).Set(Type.getInternalName(checkClass));
+               HashMap finalMethodMap = methodMap;
+               HashMap finalMethodMap1 = methodMap;
                Arrays.stream(checkClass.getDeclaredMethods()).filter((method) -> {
                   boolean var10000;
                   if (!Modifier.isStatic(method.getModifiers())) {
                      String var10001 = method.getName();
-                     if (!methodMap.containsKey(var10001 + ">" + Type.getMethodDescriptor(method))) {
+                     if (!finalMethodMap.containsKey(var10001 + ">" + Type.getMethodDescriptor(method))) {
                         var10000 = true;
                         return var10000;
                      }
@@ -116,13 +118,13 @@ public final class JFDFCompiler {
                   var10000 = false;
                   return var10000;
                }).forEach((method) -> {
-                  methodMap.put(method.getName() + ">" + Type.getMethodDescriptor(method), checkClassInternalName);
+                  finalMethodMap1.put(method.getName() + ">" + Type.getMethodDescriptor(method), checkClassInternalName);
                });
             }
          } while(methodMap.size() <= 0);
 
          List methodNames = Arrays.asList((IText[])methodMap.keySet().stream().map((s) -> {
-            return (new Text()).Set(s);
+            return (new Text()).Set((String) s);
          }).toArray((x$0) -> {
             return new IText[x$0];
          }));

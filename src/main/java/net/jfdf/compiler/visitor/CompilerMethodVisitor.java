@@ -93,9 +93,9 @@ public class CompilerMethodVisitor extends MethodVisitor {
    private int labelInstructionIndex = -1;
    private final List instructionDataList;
    private final Map variableDescriptors = new HashMap();
-   private final List startRepeatBracketIndices = new ArrayList();
-   private final List endBracketIndices = new ArrayList();
-   private final List elseIndices = new ArrayList();
+   private final List<Integer> startRepeatBracketIndices = new ArrayList<>();
+   private final List<Integer> endBracketIndices = new ArrayList<>();
+   private final List<Integer> elseIndices = new ArrayList<>();
    private boolean isThread = false;
    private boolean compileWithExecute = false;
    private final List ifStackLens = new ArrayList();
@@ -305,7 +305,6 @@ public class CompilerMethodVisitor extends MethodVisitor {
          String valueDescriptor;
          Variable valuePointer;
          String variableName;
-         String variableName;
          switch (opcode) {
             case 1:
                this.stack.add((IStackValue)(new NumberStackValue()));
@@ -446,19 +445,19 @@ public class CompilerMethodVisitor extends MethodVisitor {
             case 50:
                dividendStackValue = this.stack.remove(this.stack.size() - 2);
                reference = this.getTempVariable();
-               Variable reference;
+               Variable reference2;
                if (dividendStackValue instanceof ArrayStackValue) {
                   ArrayStackValue newArray = (ArrayStackValue)dividendStackValue;
-                  reference = newArray.getReference();
+                  reference2 = newArray.getReference();
                   variableName = Type.getType(newArray.getDescriptor()).getElementType().getDescriptor();
                } else {
-                  reference = new Variable("_jfdfR%var(" + ((Variable)dividendStackValue.getTransformedValue()).getName() + ")", Variable.Scope.NORMAL);
+                  reference2 = new Variable("_jfdfR%var(" + ((Variable)dividendStackValue.getTransformedValue()).getName() + ")", Variable.Scope.NORMAL);
                   variableName = Type.getType(dividendStackValue.getDescriptor()).getElementType().getDescriptor();
                }
 
-               VariableControl.GetListValue(reference, reference, NumberMath.add((INumber)this.stack.remove(this.stack.size() - 1).getTransformedValue(), (new Number()).Set(2)));
-               ReferenceUtils.incrementIfReference(variableName, reference);
-               this.stack.add((IStackValue)(new VariableStackValue(variableName, reference.getName())));
+               VariableControl.GetListValue(reference2, reference2, NumberMath.add((INumber)this.stack.remove(this.stack.size() - 1).getTransformedValue(), (new Number()).Set(2)));
+               ReferenceUtils.incrementIfReference(variableName, reference2);
+               this.stack.add((IStackValue)(new VariableStackValue(variableName, reference2.getName())));
                break;
             case 79:
             case 80:
@@ -470,16 +469,16 @@ public class CompilerMethodVisitor extends MethodVisitor {
             case 86:
                dividendStackValue = this.stack.remove(this.stack.size() - 3);
                IStackValue index = this.stack.remove(this.stack.size() - 2);
-               IStackValue value = this.stack.remove(this.stack.size() - 1);
+               IStackValue value2 = this.stack.remove(this.stack.size() - 1);
                String elementDescriptor = Type.getType(dividendStackValue.getDescriptor()).getElementType().getDescriptor();
-               valueDescriptor = value.getDescriptor();
+               valueDescriptor = value2.getDescriptor();
                if (dividendStackValue instanceof ArrayStackValue) {
                   ArrayStackValue arrayStackValue = (ArrayStackValue)dividendStackValue;
                   if (opcode == 83) {
                      ReferenceUtils.decrementIfReference(elementDescriptor, NumberMath.listValue(arrayStackValue.getReference(), NumberMath.add((INumber)index.getTransformedValue(), (new Number()).Set(2))));
                   }
 
-                  arrayStackValue.set(index, value.getTransformedValue());
+                  arrayStackValue.set(index, value2.getTransformedValue());
                } else {
                   valuePointer = new Variable("_jfdfR%var(" + ((Variable)dividendStackValue.getTransformedValue()).getName() + ")", Variable.Scope.NORMAL);
                   INumber newIndex = NumberMath.add((INumber)index.getTransformedValue(), (new Number()).Set(2));
@@ -487,10 +486,10 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      ReferenceUtils.decrementIfReference(elementDescriptor, NumberMath.listValue(valuePointer, newIndex));
                   }
 
-                  VariableControl.SetListValue(valuePointer, newIndex, value.getTransformedValue());
+                  VariableControl.SetListValue(valuePointer, newIndex, value2.getTransformedValue());
                }
 
-               ReferenceUtils.incrementIfReference(valueDescriptor, value.getTransformedValue());
+               ReferenceUtils.incrementIfReference(valueDescriptor, value2.getTransformedValue());
                break;
             case 87:
                this.stack.remove(this.stack.size() - 1);
@@ -609,7 +608,7 @@ public class CompilerMethodVisitor extends MethodVisitor {
             case 129:
             case 130:
             case 131:
-               Variable value = this.getTempVariable();
+               Variable value3 = this.getTempVariable();
                Tags.Operator var10000;
                switch (opcode) {
                   case 120:
@@ -641,8 +640,8 @@ public class CompilerMethodVisitor extends MethodVisitor {
                }
 
                Tags.Operator operatorType = var10000;
-               VariableControl.Bitwise(value, (INumber)this.stack.remove(this.stack.size() - 2).getTransformedValue(), (INumber)this.stack.remove(this.stack.size() - 1).getTransformedValue(), operatorType);
-               this.stack.add((IStackValue)(new VariableStackValue("J", value.getName())));
+               VariableControl.Bitwise(value3, (INumber)this.stack.remove(this.stack.size() - 2).getTransformedValue(), (INumber)this.stack.remove(this.stack.size() - 1).getTransformedValue(), operatorType);
+               this.stack.add((IStackValue)(new VariableStackValue("J", value3.getName())));
                break;
             case 133:
             case 140:
@@ -723,8 +722,8 @@ public class CompilerMethodVisitor extends MethodVisitor {
                   int var = (Integer)descriptorEntry.getKey();
                   String descriptor = (String)descriptorEntry.getValue();
                   if (var >= firstLocalVar) {
-                     Variable valuePointer = new Variable("_jfdffv>%var(_jfdfFD)>" + var, Variable.Scope.LOCAL);
-                     ReferenceUtils.decrementIfReference(descriptor, valuePointer);
+                     Variable valuePointer2 = new Variable("_jfdffv>%var(_jfdfFD)>" + var, Variable.Scope.LOCAL);
+                     ReferenceUtils.decrementIfReference(descriptor, valuePointer2);
                   }
                }
 
@@ -732,14 +731,14 @@ public class CompilerMethodVisitor extends MethodVisitor {
                Control.Return();
                break;
             case 177:
-               int firstLocalVar = (this.method.isMember() ? 1 : 0) + Type.getArgumentTypes(this.method.getDescriptor()).length;
+               int firstLocalVar2 = (this.method.isMember() ? 1 : 0) + Type.getArgumentTypes(this.method.getDescriptor()).length;
                Iterator var11 = this.variableDescriptors.entrySet().iterator();
 
                while(var11.hasNext()) {
                   Map.Entry descriptorEntry = (Map.Entry)var11.next();
                   int var = (Integer)descriptorEntry.getKey();
                   valueDescriptor = (String)descriptorEntry.getValue();
-                  if (var >= firstLocalVar) {
+                  if (var >= firstLocalVar2) {
                      valuePointer = new Variable("_jfdffv>%var(_jfdfFD)>" + var, Variable.Scope.LOCAL);
                      ReferenceUtils.decrementIfReference(valueDescriptor, valuePointer);
                   }
@@ -754,15 +753,15 @@ public class CompilerMethodVisitor extends MethodVisitor {
                break;
             case 190:
                dividendStackValue = this.stack.remove(this.stack.size() - 1);
-               value = this.getTempVariable();
+               value3 = this.getTempVariable();
                if (dividendStackValue instanceof ReferencedStackValue) {
-                  reference = ((ReferencedStackValue)dividendStackValue).getReference();
+                  reference2 = ((ReferencedStackValue)dividendStackValue).getReference();
                } else {
-                  reference = new Variable("_jfdfR%var(" + ((Variable)dividendStackValue.getTransformedValue()).getName() + ")", Variable.Scope.NORMAL);
+                  reference2 = new Variable("_jfdfR%var(" + ((Variable)dividendStackValue.getTransformedValue()).getName() + ")", Variable.Scope.NORMAL);
                }
 
-               VariableControl.ListLength(value, reference);
-               this.stack.add((IStackValue)(new MathStackValue(value, (new Number()).Set(1), MathStackValue.MathOperation.SUBTRACT)));
+               VariableControl.ListLength(value3, reference2);
+               this.stack.add((IStackValue)(new MathStackValue(value3, (new Number()).Set(1), MathStackValue.MathOperation.SUBTRACT)));
          }
 
          super.visitInsn(opcode);
@@ -821,12 +820,9 @@ public class CompilerMethodVisitor extends MethodVisitor {
          int argsCount;
          IStackValue stackValue;
          String returnVariableName;
-         IStackValue stackValue;
          MethodWrapper invokeMethod;
          int i;
-         String returnVariableName;
          CodeValue arg;
-         int i;
          Class invokeClass;
          String returnDescriptor;
          Object[] methodArgs;
@@ -868,8 +864,8 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      return;
                   } else if (stackValue instanceof CodeArrayStackValue) {
                      if (name.equals("next")) {
-                        IStackValue stackValue = this.stack.remove(this.stack.size() - 1);
-                        ((CodeArrayStackValue)stackValue).next(stackValue.getTransformedValue());
+                        IStackValue stackValue2 = this.stack.remove(this.stack.size() - 1);
+                        ((CodeArrayStackValue)stackValue2).next(stackValue2.getTransformedValue());
                      } else if (!name.equals("getArray")) {
                         throw new IllegalStateException("Unknown CodeArrayStackValue method: " + name + descriptor + ".");
                      }
@@ -1076,31 +1072,31 @@ public class CompilerMethodVisitor extends MethodVisitor {
                            Type[] argumentTypes = Type.getArgumentTypes(descriptor);
 
                            for(i = argsCount - 1; i >= 0; --i) {
-                              IStackValue stackValue = this.stack.remove(this.stack.size() - 1);
-                              if (stackValue instanceof CodeArrayStackValue) {
+                              IStackValue stackValue2 = this.stack.remove(this.stack.size() - 1);
+                              if (stackValue2 instanceof CodeArrayStackValue) {
                                  try {
                                     Class arrayClass = Class.forName(argumentTypes[i].getElementType().getClassName()).arrayType();
-                                    CodeValue[] array = ((CodeArrayStackValue)stackValue).getValues();
+                                    CodeValue[] array = ((CodeArrayStackValue)stackValue2).getValues();
                                     methodArgs[i] = Arrays.copyOf(array, array.length, arrayClass);
                                  } catch (ClassNotFoundException var27) {
                                     throw new RuntimeException("Something went wrong.", var27);
                                  }
-                              } else if (stackValue instanceof EnumStackValue) {
-                                 methodArgs[i] = ((EnumStackValue)stackValue).getEnumValue();
+                              } else if (stackValue2 instanceof EnumStackValue) {
+                                 methodArgs[i] = ((EnumStackValue)stackValue2).getEnumValue();
                               } else {
-                                 if (stackValue instanceof NumberStackValue) {
-                                    if (((NumberStackValue)stackValue).getJavaValue() == null) {
+                                 if (stackValue2 instanceof NumberStackValue) {
+                                    if (((NumberStackValue)stackValue2).getJavaValue() == null) {
                                        methodArgs[i] = null;
                                        continue;
                                     }
 
                                     if (argumentTypes[i] == Type.BOOLEAN_TYPE) {
-                                       methodArgs[i] = ((NumberStackValue)stackValue).getJavaValue().intValue() == 1;
+                                       methodArgs[i] = ((NumberStackValue)stackValue2).getJavaValue().intValue() == 1;
                                        continue;
                                     }
                                  }
 
-                                 methodArgs[i] = stackValue.getTransformedValue();
+                                 methodArgs[i] = stackValue2.getTransformedValue();
                               }
                            }
 
@@ -1146,17 +1142,17 @@ public class CompilerMethodVisitor extends MethodVisitor {
                            invokeVirtualArgs[2] = (new Text()).Set(descriptor);
 
                            for(i = argsCount - 1; i >= 0; --i) {
-                              CodeValue arg = this.stack.remove(this.stack.size() - 1).getTransformedValue();
+                              CodeValue arg2 = this.stack.remove(this.stack.size() - 1).getTransformedValue();
                               String replaceValue = JFDFCompiler.useNextPatchFeatures ? "%math(%var(_jfdfFD) - 1)" : "%var(_jfdfPFD)";
-                              if (arg instanceof Variable && ((Variable)arg).getName().contains("%var(_jfdfFD)")) {
-                                 ((Variable)arg).setName(((Variable)arg).getName().replace("%var(_jfdfFD)", replaceValue));
-                              } else if (arg instanceof Number) {
-                                 ((Number)arg).SetToString(((Number)arg).getValue().replace("%var(_jfdfFD)", replaceValue));
-                              } else if (arg instanceof Text) {
-                                 ((Text)arg).Set(((Text)arg).Get().replace("%var(_jfdfFD)", replaceValue));
+                              if (arg2 instanceof Variable && ((Variable)arg2).getName().contains("%var(_jfdfFD)")) {
+                                 ((Variable)arg2).setName(((Variable)arg2).getName().replace("%var(_jfdfFD)", replaceValue));
+                              } else if (arg2 instanceof Number) {
+                                 ((Number)arg2).SetToString(((Number)arg2).getValue().replace("%var(_jfdfFD)", replaceValue));
+                              } else if (arg2 instanceof Text) {
+                                 ((Text)arg2).Set(((Text)arg2).Get().replace("%var(_jfdfFD)", replaceValue));
                               }
 
-                              invokeVirtualArgs[i + 3] = arg;
+                              invokeVirtualArgs[i + 3] = arg2;
                            }
 
                            if (!JFDFCompiler.useNextPatchFeatures) {
@@ -1230,25 +1226,25 @@ public class CompilerMethodVisitor extends MethodVisitor {
                         VariableControl.Increment(new Variable("_jfdfFD", Variable.Scope.LOCAL));
 
                         for(i = 1; i <= argsCount; ++i) {
-                           CodeValue arg = this.stack.remove(this.stack.size() - (argsCount - i) - 1).getTransformedValue();
+                           CodeValue arg2 = this.stack.remove(this.stack.size() - (argsCount - i) - 1).getTransformedValue();
                            String replaceValue = JFDFCompiler.useNextPatchFeatures ? "%math(%var(_jfdfFD) - 1)" : "%var(_jfdfPFD)";
-                           if (arg instanceof Variable && ((Variable)arg).getName().contains("%var(_jfdfFD)")) {
-                              ((Variable)arg).setName(((Variable)arg).getName().replace("%var(_jfdfFD)", replaceValue));
-                           } else if (arg instanceof Number) {
-                              ((Number)arg).SetToString(((Number)arg).getValue().replace("%var(_jfdfFD)", replaceValue));
-                           } else if (arg instanceof Text) {
-                              ((Text)arg).Set(((Text)arg).Get().replace("%var(_jfdfFD)", replaceValue));
+                           if (arg2 instanceof Variable && ((Variable)arg2).getName().contains("%var(_jfdfFD)")) {
+                              ((Variable)arg2).setName(((Variable)arg2).getName().replace("%var(_jfdfFD)", replaceValue));
+                           } else if (arg2 instanceof Number) {
+                              ((Number)arg2).SetToString(((Number)arg2).getValue().replace("%var(_jfdfFD)", replaceValue));
+                           } else if (arg2 instanceof Text) {
+                              ((Text)arg2).Set(((Text)arg2).Get().replace("%var(_jfdfFD)", replaceValue));
                            }
 
-                           VariableControl.Set(new Variable("_jfdffa>%var(_jfdfFD)>" + i, Variable.Scope.LOCAL), arg);
+                           VariableControl.Set(new Variable("_jfdffa>%var(_jfdfFD)>" + i, Variable.Scope.LOCAL), arg2);
                         }
 
                         returnVariableName = descriptor;
 
                         try {
-                           MethodWrapper invokeMethod = MethodWrapper.getWrapper(Class.forName(owner.replace('/', '.')), name, returnVariableName);
-                           if (invokeMethod.getAnnotation(MethodFallback.class) != null) {
-                              returnVariableName = ((MethodFallback)invokeMethod.getAnnotation(MethodFallback.class)).descriptor();
+                           MethodWrapper invokeMethod2 = MethodWrapper.getWrapper(Class.forName(owner.replace('/', '.')), name, returnVariableName);
+                           if (invokeMethod2.getAnnotation(MethodFallback.class) != null) {
+                              returnVariableName = ((MethodFallback)invokeMethod2.getAnnotation(MethodFallback.class)).descriptor();
                            }
                         } catch (NoSuchMethodException | ClassNotFoundException var31) {
                            throw new RuntimeException("Something went wrong.", var31);
@@ -1363,14 +1359,14 @@ public class CompilerMethodVisitor extends MethodVisitor {
                   return;
                } else {
                   argsCount = Type.getArgumentTypes(descriptor).length;
-                  int i;
+                  int i2;
                   if (owner.equals("net/jfdf/compiler/util/CodeValueArrayBuilder") && name.equals("start")) {
-                     i = ((NumberStackValue)this.stack.remove(this.stack.size() - 1)).getJavaValue().intValue();
-                     this.stack.add((IStackValue)(new CodeArrayStackValue(i)));
+                     i2 = ((NumberStackValue)this.stack.remove(this.stack.size() - 1)).getJavaValue().intValue();
+                     this.stack.add((IStackValue)(new CodeArrayStackValue(i2)));
                   } else {
-                     Stack var10000;
-                     SpecialStackValue var10001;
-                     SpecialStackValue.SpecialValueType var10003;
+                     Stack stack;
+                     SpecialStackValue specialStackValue;
+                     SpecialStackValue.SpecialValueType valueType;
                      if (!owner.equals("net/jfdf/jfdf/mangement/Player") && !owner.equals("net/jfdf/jfdf/mangement/If$Player")) {
                         if (!owner.equals("net/jfdf/jfdf/mangement/Entity") && !owner.equals("net/jfdf/jfdf/mangement/If$Entity")) {
                            if (owner.startsWith("net/jfdf/jfdf/mangement/")) {
@@ -1384,47 +1380,47 @@ public class CompilerMethodVisitor extends MethodVisitor {
                                  }
                               }
 
-                              Object[] methodArgs = new Object[argsCount];
+                              Object[] methodArgs2 = new Object[argsCount];
                               Type[] argumentTypes = Type.getArgumentTypes(descriptor);
 
-                              for(i = argsCount - 1; i >= 0; --i) {
+                              for(i2 = argsCount - 1; i2 >= 0; --i2) {
                                  stackValue = this.stack.remove(this.stack.size() - 1);
                                  if (stackValue instanceof CodeArrayStackValue) {
                                     try {
-                                       Class arrayClass = Class.forName(argumentTypes[i].getElementType().getClassName()).arrayType();
+                                       Class arrayClass = Class.forName(argumentTypes[i2].getElementType().getClassName()).arrayType();
                                        CodeValue[] array = ((CodeArrayStackValue)stackValue).getValues();
-                                       methodArgs[i] = Arrays.copyOf(array, array.length, arrayClass);
+                                       methodArgs2[i2] = Arrays.copyOf(array, array.length, arrayClass);
                                     } catch (ClassNotFoundException var19) {
                                        throw new RuntimeException("Something went wrong.", var19);
                                     }
                                  } else if (stackValue instanceof EnumStackValue) {
-                                    methodArgs[i] = ((EnumStackValue)stackValue).getEnumValue();
+                                    methodArgs2[i2] = ((EnumStackValue)stackValue).getEnumValue();
                                  } else if ((name.equals("Call") || name.equals("CallWithArgs")) && owner.equals("net/jfdf/jfdf/mangement/Functions") && stackValue instanceof TextStackValue) {
-                                    methodArgs[i] = ((Text)stackValue.getTransformedValue()).Get();
+                                    methodArgs2[i2] = ((Text)stackValue.getTransformedValue()).Get();
                                  } else {
                                     if (stackValue instanceof NumberStackValue) {
                                        if (((NumberStackValue)stackValue).getJavaValue() == null) {
-                                          methodArgs[i] = null;
+                                          methodArgs2[i2] = null;
                                           continue;
                                        }
 
-                                       if (argumentTypes[i] == Type.BOOLEAN_TYPE) {
-                                          methodArgs[i] = ((NumberStackValue)stackValue).getJavaValue().intValue() == 1;
+                                       if (argumentTypes[i2] == Type.BOOLEAN_TYPE) {
+                                          methodArgs2[i2] = ((NumberStackValue)stackValue).getJavaValue().intValue() == 1;
                                           continue;
                                        }
                                     }
 
-                                    methodArgs[i] = stackValue.getTransformedValue();
+                                    methodArgs2[i2] = stackValue.getTransformedValue();
                                  }
                               }
 
                               try {
-                                 MethodWrapper.getWrapper(Class.forName(owner.replace('/', '.')), name, descriptor).invoke((Object)null, methodArgs);
+                                 MethodWrapper.getWrapper(Class.forName(owner.replace('/', '.')), name, descriptor).invoke((Object)null, methodArgs2);
                                  return;
                               } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException var17) {
                                  throw new RuntimeException("Something went wrong.", var17);
                               } catch (InstantiationException | IllegalArgumentException | InvocationTargetException var18) {
-                                 throw new RuntimeException("Invalid value types during invoking \"" + name + descriptor + "\" of class \"" + owner + "\".\nPassed arguments: " + Arrays.deepToString(methodArgs) + "\nInvoked by : " + Type.getInternalName(this.class_) + ">" + this.method.getName() + this.method.getDescriptor() + ":" + this.lineNumber, var18);
+                                 throw new RuntimeException("Invalid value types during invoking \"" + name + descriptor + "\" of class \"" + owner + "\".\nPassed arguments: " + Arrays.deepToString(methodArgs2) + "\nInvoked by : " + Type.getInternalName(this.class_) + ">" + this.method.getName() + this.method.getDescriptor() + ":" + this.lineNumber, var18);
                               }
                            }
 
@@ -1475,18 +1471,18 @@ public class CompilerMethodVisitor extends MethodVisitor {
 
                                  VariableControl.Increment(new Variable("_jfdfFD", Variable.Scope.LOCAL));
 
-                                 for(i = 0; i < argsCount; ++i) {
-                                    CodeValue arg = this.stack.remove(this.stack.size() - (argsCount - i)).getTransformedValue();
+                                 for(i2 = 0; i2 < argsCount; ++i2) {
+                                    CodeValue arg2 = this.stack.remove(this.stack.size() - (argsCount - i2)).getTransformedValue();
                                     returnVariableName = JFDFCompiler.useNextPatchFeatures ? "%math(%var(_jfdfFD) - 1)" : "%var(_jfdfPFD)";
-                                    if (arg instanceof Variable && ((Variable)arg).getName().contains("%var(_jfdfFD)")) {
-                                       ((Variable)arg).setName(((Variable)arg).getName().replace("%var(_jfdfFD)", returnVariableName));
-                                    } else if (arg instanceof Number) {
-                                       ((Number)arg).SetToString(((Number)arg).getValue().replace("%var(_jfdfFD)", returnVariableName));
-                                    } else if (arg instanceof Text) {
-                                       ((Text)arg).Set(((Text)arg).Get().replace("%var(_jfdfFD)", returnVariableName));
+                                    if (arg2 instanceof Variable && ((Variable)arg2).getName().contains("%var(_jfdfFD)")) {
+                                       ((Variable)arg2).setName(((Variable)arg2).getName().replace("%var(_jfdfFD)", returnVariableName));
+                                    } else if (arg2 instanceof Number) {
+                                       ((Number)arg2).SetToString(((Number)arg2).getValue().replace("%var(_jfdfFD)", returnVariableName));
+                                    } else if (arg2 instanceof Text) {
+                                       ((Text)arg2).Set(((Text)arg2).Get().replace("%var(_jfdfFD)", returnVariableName));
                                     }
 
-                                    VariableControl.Set(new Variable("_jfdffa>%var(_jfdfFD)>" + i, Variable.Scope.LOCAL), arg);
+                                    VariableControl.Set(new Variable("_jfdffa>%var(_jfdfFD)>" + i2, Variable.Scope.LOCAL), arg2);
                                  }
 
                                  String callDescriptor = descriptor;
@@ -1517,80 +1513,78 @@ public class CompilerMethodVisitor extends MethodVisitor {
                               }
                            }
                         } else {
-                           var10000 = this.stack;
-                           var10001 = new SpecialStackValue;
+                           stack = this.stack;
                            switch (name) {
                               case "getCurrentSelection":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_CURRENT_SELECTION;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_CURRENT_SELECTION;
                                  break;
                               case "getDefaultEntity":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_DEFAULT;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_DEFAULT;
                                  break;
                               case "getKiller":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_KILLER;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_KILLER;
                                  break;
                               case "getDamager":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_DAMAGER;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_DAMAGER;
                                  break;
                               case "getShooter":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_SHOOTER;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_SHOOTER;
                                  break;
                               case "getVictim":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_VICTIM;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_VICTIM;
                                  break;
                               case "getProjectile":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_PROJECTILE;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_PROJECTILE;
                                  break;
                               case "getAllEntities":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_ALL_ENTITIES;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_ALL_ENTITIES;
                                  break;
                               case "getAllMobs":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_ALL_MOBS;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_ALL_MOBS;
                                  break;
                               case "getLastEntitySpawned":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_LAST_ENTITY_SPAWNED;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_LAST_ENTITY_SPAWNED;
                                  break;
                               case "getLastMobSpawned":
-                                 var10003 = SpecialStackValue.SpecialValueType.ENTITY_LAST_MOB_SPAWNED;
+                                 valueType = SpecialStackValue.SpecialValueType.ENTITY_LAST_MOB_SPAWNED;
                                  break;
                               default:
                                  throw new IllegalStateException("Unknown Entity class static method \"" + name + "\".");
                            }
 
-                           var10001.<init>(var10003);
-                           var10000.add((IStackValue)var10001);
+                           specialStackValue = new SpecialStackValue(valueType);
+                           stack.add((IStackValue)specialStackValue);
                         }
                      } else {
-                        var10000 = this.stack;
-                        var10001 = new SpecialStackValue;
+                        stack = this.stack;
                         switch (name) {
                            case "getCurrentSelection":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_CURRENT_SELECTION;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_CURRENT_SELECTION;
                               break;
                            case "getDefaultPlayer":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_DEFAULT;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_DEFAULT;
                               break;
                            case "getKiller":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_KILLER;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_KILLER;
                               break;
                            case "getDamager":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_DAMAGER;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_DAMAGER;
                               break;
                            case "getShooter":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_SHOOTER;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_SHOOTER;
                               break;
                            case "getVictim":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_VICTIM;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_VICTIM;
                               break;
                            case "getAllPlayers":
-                              var10003 = SpecialStackValue.SpecialValueType.PLAYER_ALL_PLAYERS;
+                              valueType = SpecialStackValue.SpecialValueType.PLAYER_ALL_PLAYERS;
                               break;
                            default:
                               throw new IllegalStateException("Unknown Player class static method \"" + name + "\".");
                         }
 
-                        var10001.<init>(var10003);
-                        var10000.add((IStackValue)var10001);
+                        specialStackValue = new SpecialStackValue(valueType);
+                        stack.add((IStackValue)specialStackValue);
                      }
                   }
 
@@ -1638,7 +1632,6 @@ public class CompilerMethodVisitor extends MethodVisitor {
          Class fieldClass;
          int fieldIndex;
          Stack var10000;
-         Class fieldClass;
          Field field;
          Variable value;
          switch (opcode) {
@@ -1696,15 +1689,15 @@ public class CompilerMethodVisitor extends MethodVisitor {
                try {
                   fieldClass = Class.forName(owner.replace('/', '.'));
                   field = fieldClass.getDeclaredField(name);
-                  IStackValue value = this.stack.remove(this.stack.size() - 1);
-                  boolean isNewValue = value instanceof ReferencedStackValue;
+                  IStackValue value2 = this.stack.remove(this.stack.size() - 1);
+                  boolean isNewValue = value2 instanceof ReferencedStackValue;
                   if (isNewValue) {
-                     ((ReferencedStackValue)value).setAllocationVariable("_jfdf>" + owner + ">" + name, Variable.Scope.NORMAL);
+                     ((ReferencedStackValue)value2).setAllocationVariable("_jfdf>" + owner + ">" + name, Variable.Scope.NORMAL);
                   } else {
-                     value = new Variable("_jfdf>" + owner + ">" + name, field.getAnnotation(Saved.class) == null ? Variable.Scope.NORMAL : Variable.Scope.SAVED);
-                     ReferenceUtils.decrementIfReference(descriptor, value);
-                     VariableControl.Set(value, value.getTransformedValue());
-                     ReferenceUtils.incrementIfReference(descriptor, value);
+                     var value3 = new Variable("_jfdf>" + owner + ">" + name, field.getAnnotation(Saved.class) == null ? Variable.Scope.NORMAL : Variable.Scope.SAVED);
+                     ReferenceUtils.decrementIfReference(descriptor, value3);
+                     VariableControl.Set(value3, ((IStackValue) value3).getTransformedValue());
+                     ReferenceUtils.incrementIfReference(descriptor, value3);
                   }
                   break;
                } catch (NoSuchFieldException | ClassNotFoundException var13) {
@@ -2003,7 +1996,7 @@ public class CompilerMethodVisitor extends MethodVisitor {
          CompilerAddons.setInstructionIndex(++this.instructionIndex);
          boolean elseAfterIf = false;
          boolean whileRepeat = false;
-         final boolean invertIf = false;
+         boolean invertIf = false;
          boolean continueIf = false;
          boolean breakIf = false;
          int jumpToIndex = ((JumpInstructionData)this.instructionDataList.get(this.instructionIndex)).jumpToInstructionIndex;
@@ -2097,8 +2090,8 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      throw new IllegalStateException("Unexpected opcode: " + opcode);
                }
 
-               final String ifType = var10000;
-               final CodeValue[] items;
+               String ifType = var10000;
+               CodeValue[] items;
                if (stackValue instanceof CompareStackValue) {
                   CompareStackValue.CompareType compareType = ((CompareStackValue)stackValue).getCompareType();
                   items = new CodeValue[]{((CompareStackValue)stackValue).getStackValue1().getTransformedValue(), ((CompareStackValue)stackValue).getStackValue2().getTransformedValue()};
@@ -2121,14 +2114,17 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      items = new CodeValue[]{stackValue.getTransformedValue(), (new Number()).Set(0)};
                   }
 
+                  String finalIfType = ifType;
+                  boolean finalInvertIf = invertIf;
+                  CodeValue[] finalItems = items;
                   ifHandler = new IfHandler() {
                      public void onIf() {
-                        CodeManager.instance.addCodeBlock((new IfVariableBlock(ifType, invertIf)).SetItems(items));
+                        CodeManager.instance.addCodeBlock((new IfVariableBlock(finalIfType, finalInvertIf)).SetItems(finalItems));
                         CodeManager.instance.addCodeBlock(new BracketBlock(false, false));
                      }
 
                      public void onRepeat() {
-                        CodeManager.instance.addCodeBlock((new RepeatBlock(ifType, invertIf)).SetItems(items));
+                        CodeManager.instance.addCodeBlock((new RepeatBlock(finalIfType, finalInvertIf)).SetItems(finalItems));
                         CodeManager.instance.addCodeBlock(new BracketBlock(false, true));
                      }
                   };
@@ -2174,11 +2170,11 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      throw new IllegalStateException("Unexpected opcode: " + opcode);
                }
 
-               String ifType = var10000;
+               String ifType2 = var10000;
                if (whileRepeat) {
-                  CodeManager.instance.addCodeBlock((new RepeatBlock(ifType, invertIf)).SetItems(this.stack.remove(this.stack.size() - 2).getTransformedValue(), this.stack.remove(this.stack.size() - 1).getTransformedValue()));
+                  CodeManager.instance.addCodeBlock((new RepeatBlock(ifType2, invertIf)).SetItems(this.stack.remove(this.stack.size() - 2).getTransformedValue(), this.stack.remove(this.stack.size() - 1).getTransformedValue()));
                } else {
-                  CodeManager.instance.addCodeBlock((new IfVariableBlock(ifType, invertIf)).SetItems(this.stack.remove(this.stack.size() - 2).getTransformedValue(), this.stack.remove(this.stack.size() - 1).getTransformedValue()));
+                  CodeManager.instance.addCodeBlock((new IfVariableBlock(ifType2, invertIf)).SetItems(this.stack.remove(this.stack.size() - 2).getTransformedValue(), this.stack.remove(this.stack.size() - 1).getTransformedValue()));
                }
 
                CodeManager.instance.addCodeBlock(new BracketBlock(false, whileRepeat));
@@ -2217,11 +2213,11 @@ public class CompilerMethodVisitor extends MethodVisitor {
                int incrementAmount = 0;
                boolean isContinue = false;
 
-               for(int i = jumpToIndex; i < this.instructionDataList.size(); ++i) {
-                  InstructionData instructionData = (InstructionData)this.instructionDataList.get(i);
+               for(int i2 = jumpToIndex; i2 < this.instructionDataList.size(); ++i2) {
+                  InstructionData instructionData = (InstructionData)this.instructionDataList.get(i2);
                   InstructionType instructionType = instructionData.instructionType;
                   if (instructionType != InstructionType.LABEL && instructionType != InstructionType.FRAME && instructionType != InstructionType.LINE_NUMBER) {
-                     if (i != -1) {
+                     if (i2 != -1) {
                         if (instructionData.instructionOpcode == 167) {
                            JumpInstructionData jumpInstructionData = (JumpInstructionData)instructionData;
                            if ((Integer)this.startRepeatBracketIndices.get(this.startRepeatBracketIndices.size() - 1) == jumpInstructionData.jumpToInstructionIndex) {
@@ -2236,7 +2232,7 @@ public class CompilerMethodVisitor extends MethodVisitor {
                      }
 
                      IntegerIncrementInstructionData incrementInsnData = (IntegerIncrementInstructionData)instructionData;
-                     i = incrementInsnData.var;
+                     i2 = incrementInsnData.var;
                      incrementAmount = incrementInsnData.increment;
                   }
                }

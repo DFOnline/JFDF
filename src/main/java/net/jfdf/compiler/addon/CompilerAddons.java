@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import net.jfdf.compiler.data.stack.Stack;
 import net.jfdf.jfdf.values.Variable;
 import org.objectweb.asm.Handle;
 
@@ -21,7 +23,7 @@ public class CompilerAddons {
       addons.remove(addon);
    }
 
-   public static boolean publishInitClassEvent(String type, List stack) {
+   public static boolean publishInitClassEvent(String type, Stack stack) {
       Iterator var2 = addons.iterator();
 
       ICompilerAddon addon;
@@ -36,7 +38,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static boolean publishInvokeConstructorEvent(String type, String descriptor, List stack) {
+   public static boolean publishInvokeConstructorEvent(String type, String descriptor, Stack stack) {
       Iterator var3 = addons.iterator();
 
       ICompilerAddon addon;
@@ -51,7 +53,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static boolean publishInvokeDynamicEvent(String name, String descriptor, Handle methodHandle, Object[] methodArgs, List stack) {
+   public static boolean publishInvokeDynamicEvent(String name, String descriptor, Handle methodHandle, Object[] methodArgs, Stack stack) {
       Iterator var5 = addons.iterator();
 
       ICompilerAddon addon;
@@ -66,7 +68,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static boolean publishInvokeMemberEvent(String owner, String name, String descriptor, List stack) {
+   public static boolean publishInvokeMemberEvent(String owner, String name, String descriptor, Stack stack) {
       Iterator var4 = addons.iterator();
 
       ICompilerAddon addon;
@@ -81,7 +83,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static boolean publishInvokeStaticEvent(String owner, String name, String descriptor, List stack) {
+   public static boolean publishInvokeStaticEvent(String owner, String name, String descriptor, Stack stack) {
       Iterator var4 = addons.iterator();
 
       ICompilerAddon addon;
@@ -96,7 +98,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static boolean publishGetFieldEvent(boolean isStatic, String owner, String name, String descriptor, List stack) {
+   public static boolean publishGetFieldEvent(boolean isStatic, String owner, String name, String descriptor, Stack stack) {
       Iterator var5 = addons.iterator();
 
       ICompilerAddon addon;
@@ -111,7 +113,7 @@ public class CompilerAddons {
       return true;
    }
 
-   public static IfHandler publishIfEvent(String defaultType, boolean invert, List stack) {
+   public static IfHandler publishIfEvent(String defaultType, boolean invert, Stack stack) {
       Iterator var3 = addons.iterator();
 
       IfHandler ifHandler;

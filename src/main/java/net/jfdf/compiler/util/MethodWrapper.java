@@ -38,37 +38,22 @@ public class MethodWrapper {
    public static MethodWrapper getWrapper(Class class_, String methodName, String methodDescriptor) throws NoSuchMethodException {
       Class[] parameterTypes = (Class[])Arrays.stream(Type.getArgumentTypes(methodDescriptor)).map((type) -> {
          try {
-            Class var10000;
-            switch (type.getInternalName().replace('/', '.')) {
-               case "Z":
-                  var10000 = Boolean.TYPE;
-                  break;
-               case "B":
-                  var10000 = Byte.TYPE;
-                  break;
-               case "S":
-                  var10000 = Short.TYPE;
-                  break;
-               case "I":
-                  var10000 = Integer.TYPE;
-                  break;
-               case "J":
-                  var10000 = Long.TYPE;
-                  break;
-               case "F":
-                  var10000 = Float.TYPE;
-                  break;
-               case "D":
-                  var10000 = Double.TYPE;
-                  break;
-               case "C":
-                  var10000 = Character.TYPE;
-                  break;
-               default:
-                  var10000 = Class.forName(typeInternalName);
-            }
+            Class var10000 = switch (type.getInternalName().replace('/', '.')) {
+                case "Z" -> Boolean.TYPE;
+                case "B" -> Byte.TYPE;
+                case "S" -> Short.TYPE;
+                case "I" -> Integer.TYPE;
+                case "J" -> Long.TYPE;
+                case "F" -> Float.TYPE;
+                case "D" -> Double.TYPE;
+                case "C" -> Character.TYPE;
+                default -> null;
+                //FIXME: ?
+//               default:
+//                  var10000 = Class.forName(typeInternalName);
+            };
 
-            return var10000;
+             return var10000;
          } catch (Exception var4) {
             throw new RuntimeException("Something went wrong.", var4);
          }

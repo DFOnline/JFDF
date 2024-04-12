@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import net.jfdf.jfdf.blocks.CodeBlock;
 
 public class Scope implements CodeBlock {
-   protected List content;
+   protected List<CodeBlock> content;
    protected int totalLength;
 
    public Scope(List content) {
