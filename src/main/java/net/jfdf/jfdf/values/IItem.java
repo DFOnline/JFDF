@@ -1,4 +1,3 @@
 package net.jfdf.jfdf.values;
 
-public interface IItem extends CodeValue, IEntityType {
-}
+public interface IItem extends CodeValue, IEntityType {}

@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = ElementType.TYPE)
 public @interface NoStaticInitializer {
 }

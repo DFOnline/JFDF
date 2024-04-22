@@ -1,4 +1,3 @@
 package net.jfdf.jfdf.values;
 
-public interface IPotion extends CodeValue {
-}
+public interface IPotion extends CodeValue {}

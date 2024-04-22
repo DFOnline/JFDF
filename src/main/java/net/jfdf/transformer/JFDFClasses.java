@@ -1,130 +1,131 @@
 package net.jfdf.transformer;
 
+import net.jfdf.jfdf.blocks.CallProcessBlock;
+import net.jfdf.jfdf.blocks.IfVariableBlock;
+import net.jfdf.jfdf.blocks.ProcessBlock;
+import net.jfdf.jfdf.mangement.*;
+import net.jfdf.jfdf.mangement.Process;
+import net.jfdf.jfdf.values.*;
+import net.jfdf.jfdf.values.Number;
+import org.objectweb.asm.Type;
+import sun.reflect.ReflectionFactory;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import net.jfdf.jfdf.blocks.CallProcessBlock;
-import net.jfdf.jfdf.mangement.CodeManager;
-import net.jfdf.jfdf.mangement.Function;
-import net.jfdf.jfdf.mangement.FunctionWithArgs;
-import net.jfdf.jfdf.mangement.Functions;
-import net.jfdf.jfdf.mangement.If;
-import net.jfdf.jfdf.mangement.PlayerEvent;
-import net.jfdf.jfdf.mangement.Process;
-import net.jfdf.jfdf.mangement.VariableControl;
-import net.jfdf.jfdf.values.CodeValue;
-import net.jfdf.jfdf.values.List;
-import net.jfdf.jfdf.values.Number;
-import net.jfdf.jfdf.values.Variable;
-import org.objectweb.asm.Type;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
 
-/** @deprecated */
-@Deprecated(
-   forRemoval = true
-)
+@Deprecated(forRemoval = true)
 public class JFDFClasses {
-   public static void Consume(Object object) {
-   }
+    public static void Consume(Object object) {
+    }
 
-   public static void SetVarValue(List class_, CodeValue value, int varIndex) {
-      class_.set((new Number()).Set(varIndex), value);
-   }
+    public static void SetVarValue(List class_, CodeValue value, int varIndex) {
+        class_.set(new Number().Set(varIndex), value);
+    }
 
-   public static List GetInitList(int argIndex, int fieldsCount) {
-      CodeValue[] listValues = new CodeValue[fieldsCount];
-      Number number = (new Number()).Set(0.0F);
+    public static List GetInitList(int argIndex, int fieldsCount) {
+        CodeValue[] listValues = new CodeValue[fieldsCount];
+        Number number = new Number().Set(0.0f);
 
-      for(int i = 0; i < fieldsCount; ++i) {
-         listValues[i] = number;
-      }
+        for (int i = 0; i < fieldsCount; i++) {
+            listValues[i] = number;
+        }
 
-      return new List("%var(_function_jfdf@init_arg" + argIndex + ")", listValues);
-   }
+        return new List("%var(_function_jfdf@init_arg" + argIndex + ")", listValues);
+    }
 
-   public static boolean Equals(CodeValue a, CodeValue b, boolean not) {
-      if (not) {
-         If.Variable.NotEquals(a, new CodeValue[]{b}, false);
-      } else {
-         If.Variable.Equals(a, new CodeValue[]{b}, false);
-      }
+    public static boolean Equals(CodeValue a, CodeValue b, boolean not) {
+        if(not) {
+            If.Variable.NotEquals(a, new CodeValue[]{b}, false);
+        } else {
+            If.Variable.Equals(a, new CodeValue[]{b}, false);
+        }
 
-      return true;
-   }
+        return true;
+    }
 
-   public static List getGlobalVar(String className, String varName) {
-      try {
-         Field field = Class.forName(className.replace('/', '.')).getDeclaredField(varName);
-         Saved isSaved = (Saved)field.getAnnotation(Saved.class);
-         VariablePrefix prefixAnnotation = (VariablePrefix)field.getAnnotation(VariablePrefix.class);
-         VariableSuffix suffixAnnotation = (VariableSuffix)field.getAnnotation(VariableSuffix.class);
-         VariableOverride overrideAnnotation = (VariableOverride)field.getAnnotation(VariableOverride.class);
-         String newVarName = overrideAnnotation != null ? overrideAnnotation.name() : "";
-         String var10000 = prefixAnnotation != null ? prefixAnnotation.prefix() : "";
-         newVarName = var10000 + newVarName;
-         newVarName = newVarName + (suffixAnnotation != null ? suffixAnnotation.suffix() : "");
-         return isSaved != null ? new List(new Variable("_jfdf>" + className + ">" + newVarName, Variable.Scope.SAVED)) : new List(new Variable("_jfdf>" + className + ">" + newVarName, Variable.Scope.NORMAL));
-      } catch (NoSuchFieldException | ClassNotFoundException var8) {
-         var8.printStackTrace();
-         return null;
-      }
-   }
+    public static List getGlobalVar(String className, String varName) {
+        try {
+            Field field = Class.forName(className.replace('/', '.')).getDeclaredField(varName);
 
-   public static void setGlobalVar(CodeValue value, String className, String varName) {
-      VariableControl.Set(getGlobalVar(className, varName), value);
-   }
+            Saved isSaved = field.getAnnotation(Saved.class);
+            VariablePrefix prefixAnnotation = field.getAnnotation(VariablePrefix.class);
+            VariableSuffix suffixAnnotation = field.getAnnotation(VariableSuffix.class);
+            VariableOverride overrideAnnotation = field.getAnnotation(VariableOverride.class);
 
-   public static void callMethod(String className, String methodName, String realDescriptor, String modifiedDescriptor, CodeValue... codeValues) {
-      try {
-         Class methodClass = Class.forName(className.replace('/', '.'));
-         String newModifiedDescriptor = modifiedDescriptor;
-         if (methodName.equals("jfdf@init")) {
-            newModifiedDescriptor = modifiedDescriptor.replace(")", "Lnet/jfdf/jfdf/values/CodeValue;)");
-         } else if (methodClass.getAnnotation(ExportClass.class) != null) {
-            newModifiedDescriptor = modifiedDescriptor.replace("(", "(Lnet/jfdf/jfdf/values/List;");
-         }
+            String newVarName = varName;
 
-         Method callMethod;
-         try {
-            callMethod = methodClass.getDeclaredMethod(methodName, readDescriptor(newModifiedDescriptor));
-         } catch (NoSuchMethodException var9) {
-            callMethod = methodClass.getDeclaredMethod(methodName, readDescriptor(modifiedDescriptor));
-         }
+            newVarName = overrideAnnotation != null ? overrideAnnotation.name() : "";
+            newVarName = (prefixAnnotation != null ? prefixAnnotation.prefix() : "") + newVarName;
+            newVarName = newVarName + (suffixAnnotation != null ? suffixAnnotation.suffix() : "");
 
-         if (callMethod.getAnnotation(PlayerEvent.class) != null) {
-            throw new IllegalStateException("Calling a player event is not allowed.");
-         }
+            if(isSaved != null) {
+                return new List(new Variable("_jfdf>" + className + ">" + newVarName, Variable.Scope.SAVED));
+            } else {
+                return new List(new Variable("_jfdf>" + className + ">" + newVarName, Variable.Scope.NORMAL));
+            }
+        } catch (ClassNotFoundException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
 
-         if (callMethod.getAnnotation(Function.class) != null) {
-            Functions.Call("_jfdf>" + className + ">" + methodName + ">" + realDescriptor);
-         } else if (callMethod.getAnnotation(FunctionWithArgs.class) != null) {
-            Functions.CallWithArgs("_jfdf>" + className + ">" + methodName + ">" + realDescriptor, codeValues);
-         } else if (callMethod.getAnnotation(Process.class) != null) {
-            CodeManager.instance.addCodeBlock(new CallProcessBlock("_jfdf>" + className + ">" + methodName + ">" + realDescriptor));
-         }
-      } catch (NoSuchMethodException | ClassNotFoundException var10) {
-         var10.printStackTrace();
-      }
+        return null;
+    }
 
-   }
+    public static void setGlobalVar(CodeValue value, String className, String varName) {
+        VariableControl.Set(getGlobalVar(className, varName), value);
+    }
 
-   public static CodeValue[] newArray(Number number) {
-      return new CodeValue[Integer.parseInt(number.getValue())];
-   }
+    public static void callMethod(String className, String methodName, String realDescriptor, String modifiedDescriptor, CodeValue... codeValues) {
+        try {
+            Class<?> methodClass =  Class.forName(className.replace('/', '.'));
 
-   public static void storeArrayValue(CodeValue[] array, Number number, CodeValue value) {
-      array[Integer.parseInt(number.getValue())] = value;
-   }
+            String newModifiedDescriptor = modifiedDescriptor;
+            if(methodName.equals("jfdf@init")) {
+                newModifiedDescriptor = newModifiedDescriptor.replace(")", "Lnet/jfdf/jfdf/values/CodeValue;)");
+            } else if(methodClass.getAnnotation(ExportClass.class) != null) {
+                newModifiedDescriptor = newModifiedDescriptor.replace("(", "(Lnet/jfdf/jfdf/values/List;");
+            }
 
-   private static Class[] readDescriptor(String desc) {
-      return (Class[])Arrays.stream(Type.getMethodType(desc).getArgumentTypes()).map((type) -> {
-         try {
-            return Class.forName(type.getClassName());
-         } catch (ClassNotFoundException var2) {
-            var2.printStackTrace();
-            return null;
-         }
-      }).toArray((x$0) -> {
-         return new Class[x$0];
-      });
-   }
+            Method callMethod;
+
+            try {
+                callMethod = methodClass.getDeclaredMethod(methodName, readDescriptor(newModifiedDescriptor));
+            } catch (NoSuchMethodException e) {
+                callMethod = methodClass.getDeclaredMethod(methodName, readDescriptor(modifiedDescriptor));
+            }
+
+            if(callMethod.getAnnotation(PlayerEvent.class) != null) {
+                throw new IllegalStateException("Calling a player event is not allowed.");
+            } else if(callMethod.getAnnotation(Function.class) != null) {
+                Functions.Call("_jfdf>" + className + ">" + methodName + ">" + realDescriptor);
+            } else if(callMethod.getAnnotation(FunctionWithArgs.class) != null) {
+                Functions.CallWithArgs("_jfdf>" + className + ">" + methodName + ">" + realDescriptor, codeValues);
+            } else if(callMethod.getAnnotation(Process.class) != null) {
+                CodeManager.instance.addCodeBlock(new CallProcessBlock("_jfdf>" + className + ">" + methodName + ">" + realDescriptor));
+            }
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static CodeValue[] newArray(Number number) {
+        return new CodeValue[Integer.parseInt(number.getValue())];
+    }
+
+    public static void storeArrayValue(CodeValue[] array, Number number, CodeValue value) {
+        array[Integer.parseInt(number.getValue())] = value;
+    }
+
+    private static Class<?>[] readDescriptor(String desc) {
+        return Arrays.stream(Type.getMethodType(desc).getArgumentTypes()).map(type -> {
+            try {
+                return Class.forName(type.getClassName());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }).toArray(Class[]::new);
+    }
 }

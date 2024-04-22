@@ -3,21 +3,21 @@ package net.jfdf.jfdf.blocks;
 import net.jfdf.jfdf.values.Text;
 
 public class CallFunctionBlock implements CodeBlock {
-   private final String functionName;
-   private final Text functionNameAsText;
 
-   public CallFunctionBlock(String functionName) {
-      this.functionName = functionName;
-      this.functionNameAsText = null;
-   }
+    private final String functionName;
+    private final Text functionNameAsText;
 
-   public CallFunctionBlock(Text functionName) {
-      this.functionName = null;
-      this.functionNameAsText = functionName;
-   }
+    public CallFunctionBlock(String functionName) {
+        this.functionName = functionName;
+        this.functionNameAsText = null;
+    }
 
-   public String asJSON() {
-      String var10000 = this.functionName != null ? this.functionName : this.functionNameAsText.Get();
-      return "{\"id\":\"block\",\"block\":\"call_func\",\"args\":{\"items\":[]},\"data\":\"" + var10000 + "\"}";
-   }
+    public CallFunctionBlock(Text functionName) {
+        this.functionName = null;
+        this.functionNameAsText = functionName;
+    }
+
+    public String asJSON() {
+        return "{\"id\":\"block\",\"block\":\"call_func\",\"args\":{\"items\":[]},\"data\":\"" + (functionName != null ? functionName : functionNameAsText.Get()) +"\"}";
+    }
 }

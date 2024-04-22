@@ -9,46 +9,88 @@ import net.jfdf.compiler.util.MethodWrapper;
 import net.jfdf.compiler.util.MethodsManager;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 public class CompilerClassVisitor extends ClassVisitor {
-   private final Class class_;
+    private final Class<?> class_;
 
-   public CompilerClassVisitor(ClassVisitor classVisitor, Class class_) {
-      super(589824, classVisitor);
-      this.class_ = class_;
-   }
+    public CompilerClassVisitor(ClassVisitor classVisitor, Class<?> class_) {
+        super(Opcodes.ASM9, classVisitor);
 
-   public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-      if (this.class_.getSuperclass() == Enum.class && name.equals("valueOf") && descriptor.equals("(Ljava/lang/String;)L" + Type.getInternalName(this.class_) + ";")) {
-         return null;
-      } else {
-         try {
-            MethodWrapper methodWrapper = MethodWrapper.getWrapper(this.class_, name, descriptor);
-            if (methodWrapper.getAnnotation(MethodFallback.class) != null) {
-               return null;
-            } else if (methodWrapper.getAnnotation(NoCompile.class) != null) {
-               return null;
-            } else if (methodWrapper.isConstructor() && this.class_.getAnnotation(NoConstructors.class) != null) {
-               return null;
-            } else if (methodWrapper.isStaticInitializer() && this.class_.getAnnotation(NoStaticInitializer.class) != null) {
-               return null;
-            } else {
-               return name.startsWith("lambda$") ? null : new CompilerMethodVisitor(super.visitMethod(access, name, descriptor, signature, exceptions), this.class_, methodWrapper);
+        this.class_ = class_;
+    }
+
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        // Checks if the class is enum (Enums on Java language always have Enum class as super class)
+        if(class_.getSuperclass() == Enum.class) {
+            // Checks if the method is valueOf (Auto-generated method by javac)
+            if(name.equals("valueOf")
+                    && descriptor.equals("(Ljava/lang/String;)L" + Type.getInternalName(class_) + ";")) {
+                // Removes the method, this method will be replaced when used
+                return null;
             }
-         } catch (NoSuchMethodException var7) {
-            throw new RuntimeException("Something went wrong.", var7);
-         }
-      }
-   }
+        }
 
-   public void visitEnd() {
-      if (FieldsManager.hasFieldWithDefaultValue(this.class_) && !MethodsManager.hasStaticInitializer(this.class_)) {
-         CompilerMethodVisitor compilerMethodVisitor = new CompilerMethodVisitor(super.visitMethod(8, "<clinit>", "()V", (String)null, (String[])null), this.class_, new MethodWrapper());
-         compilerMethodVisitor.visitCode();
-         compilerMethodVisitor.visitEnd();
-      }
+        try {
+            MethodWrapper methodWrapper = MethodWrapper.getWrapper(class_, name, descriptor);
 
-      super.visitEnd();
-   }
+            // Checks if method has fallback annotation
+            if(methodWrapper.getAnnotation(MethodFallback.class) != null) {
+                // Removes this method, this method will be replaced by fallback's method when used
+                return null;
+            }
+
+            // Checks if method should not be compiled
+            if(methodWrapper.getAnnotation(NoCompile.class) != null) {
+                // Removes this method
+                return null;
+            }
+
+            // Checks if method is a constructor and class does not compile constructors
+            if(methodWrapper.isConstructor() && class_.getAnnotation(NoConstructors.class) != null) {
+                // Removes this constructor
+                return null;
+            }
+
+            // Checks if method is a static initializer and class does not compile static initializer
+            if(methodWrapper.isStaticInitializer() && class_.getAnnotation(NoStaticInitializer.class) != null) {
+                // Removes this static initializer
+                return null;
+            }
+
+            // Check if method is lambda
+            if(name.startsWith("lambda$")) {
+                // Lambda is not supported, so it doesn't compile
+                return null;
+            }
+
+            // Compiles the method into DF code
+            return new CompilerMethodVisitor(
+                    super.visitMethod(access, name, descriptor, signature, exceptions),
+                    class_,
+                    methodWrapper
+            );
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Something went wrong.", e);
+        }
+    }
+
+    @Override
+    public void visitEnd() {
+        if(FieldsManager.hasFieldWithDefaultValue(class_)
+                && !MethodsManager.hasStaticInitializer(class_)) {
+            CompilerMethodVisitor compilerMethodVisitor = new CompilerMethodVisitor(
+                    super.visitMethod(Opcodes.ACC_STATIC, "<clinit>", "()V", null, null),
+                    class_,
+                    new MethodWrapper()
+            );
+
+            compilerMethodVisitor.visitCode();
+            compilerMethodVisitor.visitEnd();
+        }
+
+        super.visitEnd();
+    }
 }

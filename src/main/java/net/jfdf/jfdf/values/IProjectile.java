@@ -1,4 +1,3 @@
 package net.jfdf.jfdf.values;
 
-public interface IProjectile extends IEntityType {
-}
+public interface IProjectile extends IEntityType {}

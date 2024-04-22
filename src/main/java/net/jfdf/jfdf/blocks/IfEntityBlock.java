@@ -5,125 +5,117 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.jfdf.jfdf.blocks.EntityActionBlock.EntitySelection;
 import net.jfdf.jfdf.values.CodeValue;
 import net.jfdf.jfdf.values.Tag;
 
 public class IfEntityBlock implements CodeBlock {
-   private List items = new ArrayList();
-   private List tags = new ArrayList();
-   private EntityActionBlock.EntitySelection entitySelection;
-   private boolean inverseIf = false;
-   private Type type;
+	private List<CodeValue> items = new ArrayList<CodeValue>();
+	private List<Tag> tags = new ArrayList<Tag>();
+    
+    private EntitySelection entitySelection;
+	private boolean inverseIf = false;
+    private Type type;
+	
+	public IfEntityBlock(Type type, EntitySelection entitySelection) {
+        this.type = type;
+        this.entitySelection = entitySelection;
+	}
 
-   public IfEntityBlock(Type type, EntityActionBlock.EntitySelection entitySelection) {
-      this.type = type;
-      this.entitySelection = entitySelection;
-   }
+	public IfEntityBlock(Type type, EntitySelection entitySelection, boolean inverseIf) {
+        this.type = type;
+		this.entitySelection = entitySelection;
+		this.inverseIf = inverseIf;
+	}
 
-   public IfEntityBlock(Type type, EntityActionBlock.EntitySelection entitySelection, boolean inverseIf) {
-      this.type = type;
-      this.entitySelection = entitySelection;
-      this.inverseIf = inverseIf;
-   }
+	public IfEntityBlock SetItems(final List<CodeValue> items) {
+		this.items = items;
 
-   public IfEntityBlock SetItems(List items) {
-      this.items = items;
-      return this;
-   }
+		return this;
+	}
+	
+	public IfEntityBlock SetItems(final CodeValue... items) {
+		this.items = Arrays.asList(items);
 
-   public IfEntityBlock SetItems(CodeValue... items) {
-      this.items = Arrays.asList(items);
-      return this;
-   }
+		return this;
+	}
 
-   public IfEntityBlock SetTags(Tag... tags) {
-      this.tags = Arrays.asList(tags);
-      Tag[] var2 = tags;
-      int var3 = tags.length;
+	public IfEntityBlock SetTags(final Tag... tags) {
+		this.tags = Arrays.asList(tags);
+		
+		for (final Tag tag : tags) {
+            tag.setBlock("if_entity");
+            tag.setAction(type.getJSONValue());
+		}
+		
+		return this;
+	}
+	
+	public String asJSON() {
+		String json = "{\"id\":\"block\",\"block\":\"if_entity\",\"args\":{\"items\":[";
+		final List<String> itemsJSON = new ArrayList<String>();
+		
+		if(tags.size() > 9) tags = tags.subList(0, 8);
+		if(items.size() > (27 - tags.size())) items = items.subList(0, 26 - tags.size());
+		
+		for (int i = 0; i < items.size(); i++) {
+			final CodeValue codeValue = items.get(i);
+			itemsJSON.add("{\"item\":" + codeValue.asJSON() + ",\"slot\":" + i + "}");
+		}
 
-      for(int var4 = 0; var4 < var3; ++var4) {
-         Tag tag = var2[var4];
-         tag.setBlock("if_entity");
-         tag.setAction(this.type.getJSONValue());
-      }
+		for (int i = 26; i >= 27 - tags.size(); i--) {
+			Tag tag = tags.get(26 - i);
+			itemsJSON.add("{\"item\":" + tag.asJSON() + ",\"slot\":" + i + "}");
+		}
+		
+		json += String.join(",", itemsJSON);
+        json += "]},\"action\":\"" + type.getJSONValue() + "\"" + ",\"selection\":\"" 
+            + entitySelection.getJSONValue() +"\"" + (inverseIf ? ",\"inverted\":\"NOT\"" : "") + "}";
+		
+		return json;
+	}
 
-      return this;
-   }
+	public enum Type {
+		IS_TYPE("IsType"),
+        NAME_EQUALS("NameEquals"),
+        IS_STANDING_ON("StandingOn"),
+        IS_GROUNDED("IsGrounded"),
+        IS_NEAR("IsNear"),
+        IS_RIDING("IsRiding"),
+        IS_MOB("IsMob"),
+        IS_PROJECTILE("IsProj"),
+        IS_VECHILE("IsVechile"),
+        IS_ITEM("IsItem"),
+        EXISTS("Exists"),
+        HAS_CUSTOM_TAG("HasCustomTag");
 
-   public String asJSON() {
-      String json = "{\"id\":\"block\",\"block\":\"if_entity\",\"args\":{\"items\":[";
-      List itemsJSON = new ArrayList();
-      if (this.tags.size() > 9) {
-         this.tags = this.tags.subList(0, 8);
-      }
+		private final static Map<Integer, Type> values = new HashMap<Integer, Type>();
 
-      if (this.items.size() > 27 - this.tags.size()) {
-         this.items = this.items.subList(0, 26 - this.tags.size());
-      }
+		private int value;
+		private final String jsonValue;
 
-      String var10001;
-      int i;
-      for(i = 0; i < this.items.size(); ++i) {
-         CodeValue codeValue = (CodeValue)this.items.get(i);
-         var10001 = codeValue.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
+		Type(final String jsonValue) {
+			this.jsonValue = jsonValue;
+		}
 
-      for(i = 26; i >= 27 - this.tags.size(); --i) {
-         Tag tag = (Tag)this.tags.get(26 - i);
-         var10001 = tag.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
+		static {
+			for (Type type : Type.values()) {
+				type.value = values.size();
+				values.put(type.getValue(), type);
+			}
+		}
 
-      json = json + String.join(",", itemsJSON);
-      json = json + "]},\"action\":\"" + this.type.getJSONValue() + "\",\"selection\":\"" + this.entitySelection.getJSONValue() + "\"" + (this.inverseIf ? ",\"inverted\":\"NOT\"" : "") + "}";
-      return json;
-   }
+		public static Type valueOf(int type) {
+			return values.get(type);
+		}
 
-   public static enum Type {
-      IS_TYPE("IsType"),
-      NAME_EQUALS("NameEquals"),
-      IS_STANDING_ON("StandingOn"),
-      IS_GROUNDED("IsGrounded"),
-      IS_NEAR("IsNear"),
-      IS_RIDING("IsRiding"),
-      IS_MOB("IsMob"),
-      IS_PROJECTILE("IsProj"),
-      IS_VECHILE("IsVechile"),
-      IS_ITEM("IsItem"),
-      EXISTS("Exists"),
-      HAS_CUSTOM_TAG("HasCustomTag");
+		public int getValue() {
+			return value;
+		}
 
-      private static final Map values = new HashMap();
-      private int value;
-      private final String jsonValue;
-
-      private Type(String jsonValue) {
-         this.jsonValue = jsonValue;
-      }
-
-      public static Type valueOf(int type) {
-         return (Type)values.get(type);
-      }
-
-      public int getValue() {
-         return this.value;
-      }
-
-      public String getJSONValue() {
-         return this.jsonValue;
-      }
-
-      static {
-         Type[] var0 = values();
-         int var1 = var0.length;
-
-         for(int var2 = 0; var2 < var1; ++var2) {
-            Type type = var0[var2];
-            type.value = values.size();
-            values.put(type.getValue(), type);
-         }
-
-      }
-   }
+		public String getJSONValue() {
+			return jsonValue;
+		}
+	}
 }

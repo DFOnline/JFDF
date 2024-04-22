@@ -1,74 +1,67 @@
 package net.jfdf.jfdf.blocks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import net.jfdf.jfdf.values.CodeValue;
 import net.jfdf.jfdf.values.Tag;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class CallProcessBlock implements CodeBlock {
-   private List items = new ArrayList();
-   private List tags = new ArrayList();
-   private final String processName;
+    private List<CodeValue> items = new ArrayList<>();
+    private List<Tag> tags = new ArrayList<>();
+    private final String processName;
 
-   public CallProcessBlock(String processName) {
-      this.processName = processName;
-   }
+    public CallProcessBlock(String processName) {
+        this.processName = processName;
+    }
 
-   public CallProcessBlock SetItems(CodeValue... items) {
-      this.items = Arrays.asList(items);
-      return this;
-   }
+    public CallProcessBlock SetItems(final CodeValue... items) {
+        this.items = Arrays.asList(items);
 
-   public CallProcessBlock SetItems(List items) {
-      this.items = items;
-      return this;
-   }
+        return this;
+    }
 
-   public CallProcessBlock SetTags(Tag... tags) {
-      this.tags = Arrays.asList(tags);
-      Tag[] var2 = tags;
-      int var3 = tags.length;
+    public CallProcessBlock SetItems(List<CodeValue> items) {
+        this.items = items;
 
-      for(int var4 = 0; var4 < var3; ++var4) {
-         Tag tag = var2[var4];
-         tag.setAction("dynamic");
-         tag.setBlock("start_process");
-      }
+        return this;
+    }
 
-      return this;
-   }
+    public CallProcessBlock SetTags(final Tag... tags) {
+        this.tags = Arrays.asList(tags);
 
-   public String asJSON() {
-      String json = "{\"id\":\"block\",\"block\":\"start_process\",\"args\":{\"items\":[";
-      if (this.items.size() >= 1 || this.tags.size() >= 1) {
-         List itemsJSON = new ArrayList();
-         if (this.tags.size() > 9) {
-            this.tags = this.tags.subList(0, 8);
-         }
+        for (final Tag tag : tags) {
+            tag.setAction("dynamic");
+            tag.setBlock("start_process");
+        }
 
-         if (this.items.size() > 27 - this.tags.size()) {
-            this.items = this.items.subList(0, 26 - this.tags.size());
-         }
+        return this;
+    }
 
-         String var10001;
-         int i;
-         for(i = 0; i < this.items.size(); ++i) {
-            CodeValue codeValue = (CodeValue)this.items.get(i);
-            var10001 = codeValue.asJSON();
-            itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-         }
+    public String asJSON() {
+        String json = "{\"id\":\"block\",\"block\":\"start_process\",\"args\":{\"items\":[";
 
-         for(i = 26; i >= 27 - this.tags.size(); --i) {
-            Tag tag = (Tag)this.tags.get(26 - i);
-            var10001 = tag.asJSON();
-            itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-         }
+        if(items.size() >= 1 || tags.size() >= 1) {
+            final List<String> itemsJSON = new ArrayList<>();
 
-         json = json + String.join(",", itemsJSON);
-      }
+            if(tags.size() > 9) tags = tags.subList(0, 8);
+            if(items.size() > (27 - tags.size())) items = items.subList(0, 26 - tags.size());
 
-      json = json + "]},\"data\":\"" + this.processName + "\"}";
-      return json;
-   }
+            for (int i = 0; i < items.size(); i++) {
+                final CodeValue codeValue = items.get(i);
+                itemsJSON.add("{\"item\":" + codeValue.asJSON() + ",\"slot\":" + i + "}");
+            }
+
+            for (int i = 26; i >= 27 - tags.size(); i--) {
+                Tag tag = tags.get(26 - i);
+                itemsJSON.add("{\"item\":" + tag.asJSON() + ",\"slot\":" + i + "}");
+            }
+
+            json += String.join(",", itemsJSON);
+        }
+        json += "]},\"data\":\"" + processName + "\"}";
+
+        return json;
+    }
 }

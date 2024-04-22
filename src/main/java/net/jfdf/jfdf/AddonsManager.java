@@ -1,35 +1,32 @@
 package net.jfdf.jfdf;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import net.jfdf.jfdf.blocks.CodeBlock;
 import net.jfdf.jfdf.blocks.CodeHeader;
 
+import java.util.*;
+
 public final class AddonsManager {
-   private static final List addons = new ArrayList();
+    private static final List<IBlocksAddon> addons = new ArrayList<>();
 
-   public static void registerAddon(IBlocksAddon addon) {
-      addons.add(addon);
-   }
+    public static void registerAddon(IBlocksAddon addon) {
+        addons.add(addon);
+    }
 
-   public static void unregisterAddon(IBlocksAddon addon) {
-      addons.remove(addon);
-   }
+    public static void unregisterAddon(IBlocksAddon addon) {
+        addons.remove(addon);
+    }
 
-   public static Map publishPreGenerateLine(CodeHeader codeHeader, List blocks) {
-      Map result = new LinkedHashMap();
-      Iterator var3 = addons.iterator();
+    public static Map<CodeHeader, List<CodeBlock>> publishPreGenerateLine(CodeHeader codeHeader, List<CodeBlock> blocks) {
+        Map<CodeHeader, List<CodeBlock>> result = new LinkedHashMap<>();
 
-      while(var3.hasNext()) {
-         IBlocksAddon addon = (IBlocksAddon)var3.next();
-         Map addonResult = addon.onPreGenerateLine(codeHeader, blocks);
-         if (addonResult != null) {
-            result.putAll(addonResult);
-         }
-      }
+        for (IBlocksAddon addon : addons) {
+            Map<CodeHeader, List<CodeBlock>> addonResult = addon.onPreGenerateLine(codeHeader, blocks);
 
-      return result;
-   }
+            if(addonResult != null) {
+                result.putAll(addonResult);
+            }
+        }
+
+        return result;
+    }
 }

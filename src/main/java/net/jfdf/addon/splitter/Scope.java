@@ -1,35 +1,33 @@
 package net.jfdf.addon.splitter;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
 import net.jfdf.jfdf.blocks.CodeBlock;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class Scope implements CodeBlock {
-   protected List content;
-   protected int totalLength;
+    protected List<CodeBlock> content;
+    protected int totalLength;
 
-   public Scope(List content) {
-      this.content = content;
-      this.totalLength = 2;
-      Iterator var2 = content.iterator();
+    public Scope(List<CodeBlock> content) {
+        this.content = content;
 
-      while(var2.hasNext()) {
-         CodeBlock block = (CodeBlock)var2.next();
-         if (block instanceof Scope) {
-            this.totalLength += ((Scope)block).totalLength;
-         } else {
-            this.totalLength += 2;
-         }
-      }
+        this.totalLength = 2;
+        for (CodeBlock block : content) {
+            if(block instanceof Scope) {
+                this.totalLength += ((Scope) block).totalLength;
+            } else {
+                this.totalLength += 2;
+            }
+        }
+    }
 
-   }
+    @Override
+    public String asJSON() {
+        return content.stream().map(CodeBlock::asJSON).collect(Collectors.joining(","));
+    }
 
-   public String asJSON() {
-      return (String)this.content.stream().map(CodeBlock::asJSON).collect(Collectors.joining(","));
-   }
-
-   public List getContent() {
-      return this.content;
-   }
+    public List<CodeBlock> getContent() {
+        return content;
+    }
 }

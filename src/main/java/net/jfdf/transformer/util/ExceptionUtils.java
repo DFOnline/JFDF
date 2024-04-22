@@ -7,8 +7,8 @@ import net.jfdf.jfdf.values.Tags;
 import net.jfdf.jfdf.values.Text;
 
 public class ExceptionUtils {
-   public static void throwException(Exception exception) {
-      Player.getAllPlayers().SendMessage(new IText[]{(new Text()).Set("&c" + exception)}, Tags.AlignmentMode.REGULAR, Tags.TextValueMerging.NO_SPACES);
-      Control.End();
-   }
+    public static void throwException(Exception exception) {
+        Player.getAllPlayers().SendMessage(new IText[]{ new Text().Set("&c" + exception) }, Tags.AlignmentMode.REGULAR, Tags.TextValueMerging.NO_SPACES);
+        Control.End();
+    }
 }

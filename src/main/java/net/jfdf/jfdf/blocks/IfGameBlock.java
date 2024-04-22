@@ -5,122 +5,112 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import net.jfdf.jfdf.values.CodeValue;
 import net.jfdf.jfdf.values.Tag;
 
 public class IfGameBlock implements CodeBlock {
-   private List items = new ArrayList();
-   private List tags = new ArrayList();
-   private boolean inverseIf = false;
-   private Type type;
+	private List<CodeValue> items = new ArrayList<CodeValue>();
+	private List<Tag> tags = new ArrayList<Tag>();
+    
+	private boolean inverseIf = false;
+    private Type type;
+	
+	public IfGameBlock(Type type) {
+        this.type = type;
+	}
 
-   public IfGameBlock(Type type) {
-      this.type = type;
-   }
+	public IfGameBlock(Type type, boolean inverseIf) {
+		this.type = type;
+		this.inverseIf = inverseIf;
+	}
 
-   public IfGameBlock(Type type, boolean inverseIf) {
-      this.type = type;
-      this.inverseIf = inverseIf;
-   }
+	public IfGameBlock SetItems(final List<CodeValue> items) {
+		this.items = items;
 
-   public IfGameBlock SetItems(List items) {
-      this.items = items;
-      return this;
-   }
+		return this;
+	}
+	
+	public IfGameBlock SetItems(final CodeValue... items) {
+		this.items = Arrays.asList(items);
 
-   public IfGameBlock SetItems(CodeValue... items) {
-      this.items = Arrays.asList(items);
-      return this;
-   }
+		return this;
+	}
 
-   public IfGameBlock SetTags(Tag... tags) {
-      this.tags = Arrays.asList(tags);
-      Tag[] var2 = tags;
-      int var3 = tags.length;
+	public IfGameBlock SetTags(final Tag... tags) {
+		this.tags = Arrays.asList(tags);
+		
+		for (final Tag tag : tags) {
+            tag.setBlock("if_game");
+            tag.setAction(type.getJSONValue());
+		}
+		
+		return this;
+	}
+	
+	public String asJSON() {
+		String json = "{\"id\":\"block\",\"block\":\"if_game\",\"args\":{\"items\":[";
+		final List<String> itemsJSON = new ArrayList<String>();
+		
+		if(tags.size() > 9) tags = tags.subList(0, 8);
+		if(items.size() > (27 - tags.size())) items = items.subList(0, 26 - tags.size());
+		
+		for (int i = 0; i < items.size(); i++) {
+			final CodeValue codeValue = items.get(i);
+			itemsJSON.add("{\"item\":" + codeValue.asJSON() + ",\"slot\":" + i + "}");
+		}
 
-      for(int var4 = 0; var4 < var3; ++var4) {
-         Tag tag = var2[var4];
-         tag.setBlock("if_game");
-         tag.setAction(this.type.getJSONValue());
-      }
+		for (int i = 26; i >= 27 - tags.size(); i--) {
+			Tag tag = tags.get(26 - i);
+			itemsJSON.add("{\"item\":" + tag.asJSON() + ",\"slot\":" + i + "}");
+		}
+		
+		json += String.join(",", itemsJSON);
+        json += "]},\"action\":\"" + type.getJSONValue() + (inverseIf ? "\",\"inverted\":\"NOT\"" : "\"") + "}";
+		
+		return json;
+	}
 
-      return this;
-   }
+	public enum Type {
+		BLOCK_EQUALS("BlockEquals"),
+        BLOCK_POWERED("BlockPowered"),
+        CONTAINER_HAS_ITEM("ContainterHas"),
+        CONTAINER_HAS_ALL_ITEMS("ContainterHasAll"),
+        CONTAINER_HAS_ROOM_FOR_ITEM("HasRoomForItem"),
+        SIGN_CONTAINS_TEXT("SignHasTxt"),
+        HAS_PLAYER("HasPlayer"),
+        EVENT_BLOCK_EQUALS("EventBlockEquals"),
+        EVENT_ITEM_EQUALS("EventItemEquals"),
+        COMMAND_EQUALS("CommandEquals"),
+        COMMAND_ARGUMENT_EQUALS("CmdArgEquals"),
+        IS_EVENT_CANCELLED("EventCancelled");
 
-   public String asJSON() {
-      String json = "{\"id\":\"block\",\"block\":\"if_game\",\"args\":{\"items\":[";
-      List itemsJSON = new ArrayList();
-      if (this.tags.size() > 9) {
-         this.tags = this.tags.subList(0, 8);
-      }
+		private final static Map<Integer, Type> values = new HashMap<Integer, Type>();
 
-      if (this.items.size() > 27 - this.tags.size()) {
-         this.items = this.items.subList(0, 26 - this.tags.size());
-      }
+		private int value;
+		private final String jsonValue;
 
-      String var10001;
-      int i;
-      for(i = 0; i < this.items.size(); ++i) {
-         CodeValue codeValue = (CodeValue)this.items.get(i);
-         var10001 = codeValue.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
+		Type(final String jsonValue) {
+			this.jsonValue = jsonValue;
+		}
 
-      for(i = 26; i >= 27 - this.tags.size(); --i) {
-         Tag tag = (Tag)this.tags.get(26 - i);
-         var10001 = tag.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
+		static {
+			for (Type type : Type.values()) {
+				type.value = values.size();
+				values.put(type.getValue(), type);
+			}
+		}
 
-      json = json + String.join(",", itemsJSON);
-      json = json + "]},\"action\":\"" + this.type.getJSONValue() + (this.inverseIf ? "\",\"inverted\":\"NOT\"" : "\"") + "}";
-      return json;
-   }
+		public static Type valueOf(int type) {
+			return values.get(type);
+		}
 
-   public static enum Type {
-      BLOCK_EQUALS("BlockEquals"),
-      BLOCK_POWERED("BlockPowered"),
-      CONTAINER_HAS_ITEM("ContainterHas"),
-      CONTAINER_HAS_ALL_ITEMS("ContainterHasAll"),
-      CONTAINER_HAS_ROOM_FOR_ITEM("HasRoomForItem"),
-      SIGN_CONTAINS_TEXT("SignHasTxt"),
-      HAS_PLAYER("HasPlayer"),
-      EVENT_BLOCK_EQUALS("EventBlockEquals"),
-      EVENT_ITEM_EQUALS("EventItemEquals"),
-      COMMAND_EQUALS("CommandEquals"),
-      COMMAND_ARGUMENT_EQUALS("CmdArgEquals"),
-      IS_EVENT_CANCELLED("EventCancelled");
+		public int getValue() {
+			return value;
+		}
 
-      private static final Map values = new HashMap();
-      private int value;
-      private final String jsonValue;
-
-      private Type(String jsonValue) {
-         this.jsonValue = jsonValue;
-      }
-
-      public static Type valueOf(int type) {
-         return (Type)values.get(type);
-      }
-
-      public int getValue() {
-         return this.value;
-      }
-
-      public String getJSONValue() {
-         return this.jsonValue;
-      }
-
-      static {
-         Type[] var0 = values();
-         int var1 = var0.length;
-
-         for(int var2 = 0; var2 < var1; ++var2) {
-            Type type = var0[var2];
-            type.value = values.size();
-            values.put(type.getValue(), type);
-         }
-
-      }
-   }
+		public String getJSONValue() {
+			return jsonValue;
+		}
+	}
 }

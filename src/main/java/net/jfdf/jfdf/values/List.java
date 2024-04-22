@@ -3,262 +3,224 @@ package net.jfdf.jfdf.values;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+
 import net.jfdf.jfdf.mangement.CodeManager;
 import net.jfdf.jfdf.mangement.VariableControl;
+import net.jfdf.jfdf.values.Tags.SearchOrder;
 
 public class List extends Variable {
-   public static ListMode listMode;
-   private int getIndex = 0;
-   private int indexOfIndex = 0;
-   private int addedElementsSinceLastLength = 0;
-   private GetLengthState getLengthState;
+    public static ListMode listMode = ListMode.BOTH;
 
-   public List() {
-      super("list" + (new Random()).nextInt(1000000), Variable.Scope.LOCAL);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      VariableControl.CreateList(this);
-   }
+    private int getIndex = 0;
+    private int indexOfIndex = 0;
+    private int addedElementsSinceLastLength = 0;
+    private GetLengthState getLengthState = GetLengthState.NO_LENGTH;
 
-   public List(Variable list) {
-      super(list);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-   }
+    public List() {
+        super("list" + new Random().nextInt(1000000), Scope.LOCAL);
+        VariableControl.CreateList(this);
+    }
+    
+    public List(Variable list) {
+        super(list);
+    }
 
-   public List(String name) {
-      super(name, Variable.Scope.LOCAL);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      VariableControl.CreateList(this);
-   }
+    public List(String name) {
+        super(name, Scope.LOCAL);
+        VariableControl.CreateList(this);
+    }
 
-   public List(Variable.Scope scope) {
-      super("list" + (new Random()).nextInt(1000000), scope);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      VariableControl.CreateList(this);
-   }
+    public List(Scope scope) {
+        super("list" + new Random().nextInt(1000000), scope);
+        VariableControl.CreateList(this);
+    }
 
-   public List(String name, Variable.Scope scope) {
-      super(name, scope);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      VariableControl.CreateList(this);
-   }
+    public List(String name, Scope scope) {
+        super(name, scope);
+        VariableControl.CreateList(this);
+    }
 
-   public List(CodeValue... contents) {
-      super("list" + (new Random()).nextInt(1000000), Variable.Scope.LOCAL);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      if (contents.length >= 27) {
-         throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");
-      } else {
-         VariableControl.CreateList(this, contents);
-      }
-   }
+    public List(CodeValue... contents) {
+        super("list" + new Random().nextInt(1000000), Scope.LOCAL);
+        if(contents.length >= 27) {throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");}
+        VariableControl.CreateList(this, contents);
+    }
 
-   public List(String name, CodeValue... contents) {
-      super(name, Variable.Scope.LOCAL);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      if (contents.length >= 27) {
-         throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");
-      } else {
-         VariableControl.CreateList(this, contents);
-      }
-   }
+    public List(String name, CodeValue... contents) {
+        super(name, Scope.LOCAL);
+        if(contents.length >= 27) {throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");}
+        VariableControl.CreateList(this, contents);
+    }
 
-   public List(Variable.Scope scope, CodeValue... contents) {
-      super("list" + (new Random()).nextInt(1000000), scope);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      if (contents.length >= 27) {
-         throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");
-      } else {
-         VariableControl.CreateList(this, contents);
-      }
-   }
+    public List(Scope scope, CodeValue... contents) {
+        super("list" + new Random().nextInt(1000000), scope);
+        if(contents.length >= 27) {throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");}
+        VariableControl.CreateList(this, contents);
+    }
 
-   public List(String name, Variable.Scope scope, CodeValue... contents) {
-      super(name, scope);
-      this.getLengthState = List.GetLengthState.NO_LENGTH;
-      if (contents.length >= 27) {
-         throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");
-      } else {
-         VariableControl.CreateList(this, contents);
-      }
-   }
+    public List(String name, Scope scope, CodeValue... contents) {
+        super(name, scope);
+        if(contents.length >= 27) {throw new IllegalArgumentException("You can't create a list with more than 26 elements in one code block.");}
+        VariableControl.CreateList(this, contents);
+    }
+    
+    public List addZeros(int zerosAmount) {
+        CodeValue[] fillArray = new CodeValue[26];
+        Arrays.fill(fillArray, new Number().Set(0.0f));
 
-   public List addZeros(int zerosAmount) {
-      CodeValue[] fillArray = new CodeValue[26];
-      Arrays.fill(fillArray, (new Number()).Set(0.0F));
-
-      for(int i = 0; i < zerosAmount; i += 26) {
-         if (zerosAmount - i < 26) {
-            fillArray = new CodeValue[zerosAmount - i];
-            Arrays.fill(fillArray, (new Number()).Set(0.0F));
-         }
-
-         this.add(fillArray);
-      }
-
-      return this;
-   }
-
-   public List add(CodeValue... values) {
-      if (values.length >= 27) {
-         throw new IllegalArgumentException("You can't add more than 26 elements in one code block.");
-      } else {
-         VariableControl.AppendValue(this, values);
-         return this;
-      }
-   }
-
-   public List add(Object value) {
-      if (value instanceof CodeValue) {
-         this.add((CodeValue)value);
-      }
-
-      return this;
-   }
-
-   public List addAll(Variable... lists) {
-      if (lists.length >= 27) {
-         throw new IllegalArgumentException("You can't add more than 26 lists in one code block.");
-      } else {
-         VariableControl.AppendList(this, (Variable[])Arrays.stream(lists).map(List::new).toArray((x$0) -> {
-            return new List[x$0];
-         }));
-         if (listMode == List.ListMode.CPU_EFFICIENT && this.getLengthState != List.GetLengthState.NO_LENGTH) {
-            Variable lengthVariable = CodeManager.instance.getVariable(this.getName() + "_length", Variable.Scope.LOCAL);
-            ArrayList lengthVariables = new ArrayList();
-            Variable[] var4 = lists;
-            int var5 = lists.length;
-
-            for(int var6 = 0; var6 < var5; ++var6) {
-               Variable listVariable = var4[var6];
-               Variable listLengthVariable = CodeManager.instance.getVariable(listVariable.getName() + "_length", Variable.Scope.LOCAL);
-               VariableControl.ListLength(listLengthVariable, new List(listVariable));
-               lengthVariables.add(listLengthVariable);
+        for (int i = 0; i < zerosAmount; i += 26) {
+            if((zerosAmount - i) < 26) {
+                fillArray = new CodeValue[zerosAmount - i];
+                Arrays.fill(fillArray, new Number().Set(0.0f));
             }
 
-            VariableControl.Increment(lengthVariable, (INumber[])lengthVariables.toArray(new INumber[0]));
-         } else {
-            this.getLengthState = List.GetLengthState.NEEDS_UPDATE_ADD_ALL;
-         }
+            add(fillArray);
+        }
 
-         return this;
-      }
-   }
+        return this;
+    }
 
-   public List remove(CodeValue... values) {
-      if (values.length >= 27) {
-         throw new IllegalArgumentException("You can't add more than 26 elements in one code block.");
-      } else {
-         VariableControl.RemoveListValue(this, values);
-         return this;
-      }
-   }
+    public List add(CodeValue... values) {
+        if(values.length >= 27) {throw new IllegalArgumentException("You can't add more than 26 elements in one code block.");}
+        VariableControl.AppendValue(this, values);
+        return this;
+    }
 
-   public List remove(Object value) {
-      if (value instanceof CodeValue) {
-         this.remove((CodeValue)value);
-      }
+    public List add(Object value) {
+        if(value instanceof CodeValue) {
+            add(new CodeValue[] {(CodeValue) value});
+        }
 
-      return this;
-   }
+        return this;
+    }
 
-   public List removeAt(INumber... indices) {
-      VariableControl.RemoveListIndex(this, indices);
-      return this;
-   }
+    public List addAll(Variable... lists) {
+        if(lists.length >= 27) {throw new IllegalArgumentException("You can't add more than 26 lists in one code block.");}
+        VariableControl.AppendList(this, Arrays.stream(lists).map(List::new).toArray(List[]::new));
+        if(listMode == ListMode.CPU_EFFICIENT && getLengthState != GetLengthState.NO_LENGTH) {
+            Variable lengthVariable = CodeManager.instance.getVariable(getName() + "_length", Scope.LOCAL);
+            ArrayList<Variable> lengthVariables = new ArrayList<>();
 
-   public Variable get(Variable valueVariable, INumber index) {
-      VariableControl.GetListValue(valueVariable, this, index);
-      return new List(valueVariable);
-   }
+            for (Variable listVariable : lists) {
+                Variable listLengthVariable = CodeManager.instance.getVariable(listVariable.getName() + "_length", Scope.LOCAL);
+                VariableControl.ListLength(listLengthVariable, new List(listVariable));
+                lengthVariables.add(listLengthVariable);
+            }
 
-   public List get(INumber index) {
-      Variable valueVariable = CodeManager.instance.getVariable(this.getName() + "_value" + this.getIndex, Variable.Scope.LOCAL);
-      VariableControl.GetListValue(valueVariable, this, index);
-      ++this.getIndex;
-      return new List(valueVariable);
-   }
+            VariableControl.Increment(lengthVariable, lengthVariables.toArray(new INumber[0]));
+        } else {
+            getLengthState = GetLengthState.NEEDS_UPDATE_ADD_ALL;
+        }
+        return this;
+    }
 
-   public List get(int index) {
-      return this.get(Number.New().Set(index));
-   }
+    public List remove(CodeValue... values) {
+        if(values.length >= 27) {throw new IllegalArgumentException("You can't add more than 26 elements in one code block.");}
+        VariableControl.RemoveListValue(this, values);
+        return this;
+    }
 
-   public void set(INumber index, CodeValue value) {
-      VariableControl.SetListValue(this, index, value);
-   }
+    public List remove(Object value) {
+        if(value instanceof CodeValue) {
+            remove(new CodeValue[] {(CodeValue) value});
+        }
 
-   public Variable length() {
-      Variable valueVariable = CodeManager.instance.getVariable(this.getName() + "_length", Variable.Scope.LOCAL);
-      if (this.getLengthState != List.GetLengthState.NO_LENGTH && (this.getLengthState != List.GetLengthState.NEEDS_UPDATE_ADD_ALL || listMode == List.ListMode.CPU_EFFICIENT) && (this.getLengthState != List.GetLengthState.NEEDS_UPDATE_ADD || listMode != List.ListMode.LESS_SPACE)) {
-         if (this.getLengthState == List.GetLengthState.NEEDS_UPDATE_ADD && listMode != List.ListMode.LESS_SPACE) {
-            VariableControl.Increment(valueVariable, Number.New().Set(this.addedElementsSinceLastLength));
-            this.addedElementsSinceLastLength = 0;
-         }
-      } else {
-         VariableControl.ListLength(valueVariable, this);
-         this.getLengthState = List.GetLengthState.FOUND;
-         this.addedElementsSinceLastLength = 0;
-      }
+        return this;
+    }
 
-      return valueVariable;
-   }
+    public List removeAt(INumber... indices) {
+        VariableControl.RemoveListIndex(this, indices);
 
-   public Variable size() {
-      return this.length();
-   }
+        return this;
+    }
 
-   public Variable length(Variable valueVariable) {
-      VariableControl.ListLength(valueVariable, this);
-      return valueVariable;
-   }
+    public Variable get(Variable valueVariable, INumber index) {
+        VariableControl.GetListValue(valueVariable, this, index);
+        return new List(valueVariable);
+    }
 
-   public Variable indexOf(CodeValue value) {
-      Variable valueVariable = CodeManager.instance.getVariable(this.getName() + "_index" + this.indexOfIndex, Variable.Scope.LOCAL);
-      VariableControl.GetValueIndex(valueVariable, this, value, Tags.SearchOrder.ASCENDING__FIRST_INDEX_);
-      ++this.indexOfIndex;
-      return valueVariable;
-   }
+    public List get(INumber index) {
+        Variable valueVariable = CodeManager.instance.getVariable(getName() + "_value" + getIndex, Scope.LOCAL);
+        VariableControl.GetListValue(valueVariable, this, index);
+        getIndex += 1;
+        return new List(valueVariable);
+    }
 
-   public Variable lastIndexOf(CodeValue value) {
-      Variable valueVariable = CodeManager.instance.getVariable(this.getName() + "_index" + this.indexOfIndex, Variable.Scope.LOCAL);
-      VariableControl.GetValueIndex(valueVariable, this, value, Tags.SearchOrder.DESCENDING__LAST_INDEX_);
-      ++this.indexOfIndex;
-      return valueVariable;
-   }
+    public List get(int index) {return get(Number.New().Set(index));}
 
-   public Variable indexOf(Variable valueVariable, CodeValue value) {
-      VariableControl.GetValueIndex(valueVariable, this, value, Tags.SearchOrder.ASCENDING__FIRST_INDEX_);
-      return valueVariable;
-   }
+    public void set(INumber index, CodeValue value) {
+        VariableControl.SetListValue(this, index, value);
+    }
 
-   public Variable lastIndexOf(Variable valueVariable, CodeValue value) {
-      VariableControl.GetValueIndex(valueVariable, this, value, Tags.SearchOrder.DESCENDING__LAST_INDEX_);
-      return valueVariable;
-   }
+    public Variable length() {
+        Variable valueVariable = CodeManager.instance.getVariable(getName() + "_length", Scope.LOCAL);
+        if(getLengthState == GetLengthState.NO_LENGTH 
+            || (getLengthState == GetLengthState.NEEDS_UPDATE_ADD_ALL && listMode != ListMode.CPU_EFFICIENT)
+            || (getLengthState == GetLengthState.NEEDS_UPDATE_ADD && listMode == ListMode.LESS_SPACE)) {
+            VariableControl.ListLength(valueVariable, this);
+            getLengthState = GetLengthState.FOUND;
+            addedElementsSinceLastLength = 0;
+        } else if((getLengthState == GetLengthState.NEEDS_UPDATE_ADD && listMode != ListMode.LESS_SPACE)) {
+            VariableControl.Increment(valueVariable, Number.New().Set(addedElementsSinceLastLength));
+            addedElementsSinceLastLength = 0;
+        }
+        return valueVariable;
+    }
 
-   public List randomize() {
-      VariableControl.RandomizeList(this, (Variable)null);
-      return this;
-   }
+    public Variable size() {return length();}
 
-   public String toString() {
-      String var10000 = this.getName();
-      return "List{name='" + var10000 + "', scope=" + this.getScope() + "}";
-   }
+    public Variable length(Variable valueVariable) {
+        VariableControl.ListLength(valueVariable, this);
+        return valueVariable;
+    }
 
-   static {
-      listMode = List.ListMode.BOTH;
-   }
+    public Variable indexOf(CodeValue value) {
+        Variable valueVariable = CodeManager.instance.getVariable(getName() + "_index" + indexOfIndex, Scope.LOCAL);
+        VariableControl.GetValueIndex(valueVariable, this, value, SearchOrder.ASCENDING__FIRST_INDEX_);
+        indexOfIndex += 1;
+        return valueVariable;
+    }
 
-   private static enum GetLengthState {
-      NO_LENGTH,
-      NEEDS_UPDATE_ADD,
-      NEEDS_UPDATE_ADD_ALL,
-      FOUND;
-   }
+    public Variable lastIndexOf(CodeValue value) {
+        Variable valueVariable = CodeManager.instance.getVariable(getName() + "_index" + indexOfIndex, Scope.LOCAL);
+        VariableControl.GetValueIndex(valueVariable, this, value, SearchOrder.DESCENDING__LAST_INDEX_);
+        indexOfIndex += 1;
+        return valueVariable;
+    }
 
-   public static enum ListMode {
-      CPU_EFFICIENT,
-      LESS_SPACE,
-      BOTH;
-   }
+    public Variable indexOf(Variable valueVariable, CodeValue value) {
+        VariableControl.GetValueIndex(valueVariable, this, value, SearchOrder.ASCENDING__FIRST_INDEX_);
+        return valueVariable;
+    }
+
+    public Variable lastIndexOf(Variable valueVariable, CodeValue value) {
+        VariableControl.GetValueIndex(valueVariable, this, value, SearchOrder.DESCENDING__LAST_INDEX_);
+        return valueVariable;
+    }
+
+    public List randomize() {
+        VariableControl.RandomizeList(this, null);
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "List{" +
+                "name='" + getName() + '\'' +
+                ", scope=" + getScope() +
+                '}';
+    }
+
+    private enum GetLengthState {
+        NO_LENGTH,
+        NEEDS_UPDATE_ADD,
+        NEEDS_UPDATE_ADD_ALL,
+        FOUND
+    }
+
+    public enum ListMode {
+        CPU_EFFICIENT,
+        LESS_SPACE,
+        BOTH
+    }
 }

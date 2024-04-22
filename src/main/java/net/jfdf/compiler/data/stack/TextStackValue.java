@@ -4,21 +4,23 @@ import net.jfdf.jfdf.values.CodeValue;
 import net.jfdf.jfdf.values.Text;
 
 public class TextStackValue implements IStackValue {
-   private final Text value;
+    private final Text value;
 
-   public TextStackValue(String value) {
-      this.value = (new Text()).Set(value);
-   }
+    public TextStackValue(String value) {
+        this.value = new Text().Set(value);
+    }
 
-   public Text getValue() {
-      return this.value;
-   }
+    public Text getValue() {
+        return value;
+    }
 
-   public String getDescriptor() {
-      return "Ljava/lang/String;";
-   }
+    @Override
+    public String getDescriptor() {
+        return "Ljava/lang/String;";
+    }
 
-   public CodeValue getTransformedValue() {
-      return this.value;
-   }
+    @Override
+    public CodeValue getTransformedValue() {
+        return value;
+    }
 }

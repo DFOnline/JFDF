@@ -1,4 +1,3 @@
 package net.jfdf.jfdf.values;
 
-public interface ISound extends CodeValue {
-}
+public interface ISound extends CodeValue {}

@@ -3,38 +3,42 @@ package net.jfdf.compiler.data.stack;
 import net.jfdf.jfdf.values.CodeValue;
 
 public class CompareStackValue implements IStackValue {
-   private final CompareType compareType;
-   private final IStackValue stackValue1;
-   private final IStackValue stackValue2;
+    private final CompareType compareType;
 
-   public CompareStackValue(CompareType compareType, IStackValue stackValue1, IStackValue stackValue2) {
-      this.compareType = compareType;
-      this.stackValue1 = stackValue1;
-      this.stackValue2 = stackValue2;
-   }
+    private final IStackValue stackValue1;
+    private final IStackValue stackValue2;
 
-   public CodeValue getTransformedValue() {
-      throw new IllegalStateException("Getting transformed value is not support");
-   }
+    public CompareStackValue(CompareType compareType, IStackValue stackValue1, IStackValue stackValue2) {
+        this.compareType = compareType;
 
-   public String getDescriptor() {
-      return null;
-   }
+        this.stackValue1 = stackValue1;
+        this.stackValue2 = stackValue2;
+    }
 
-   public CompareType getCompareType() {
-      return this.compareType;
-   }
+    @Override
+    public CodeValue getTransformedValue() {
+        throw new IllegalStateException("Getting transformed value is not support");
+    }
 
-   public IStackValue getStackValue1() {
-      return this.stackValue1;
-   }
+    @Override
+    public String getDescriptor() {
+        return null;
+    }
 
-   public IStackValue getStackValue2() {
-      return this.stackValue2;
-   }
+    public CompareType getCompareType() {
+        return compareType;
+    }
 
-   public static enum CompareType {
-      NORMAL,
-      LIST_CONTAINS;
-   }
+    public IStackValue getStackValue1() {
+        return stackValue1;
+    }
+
+    public IStackValue getStackValue2() {
+        return stackValue2;
+    }
+
+    public enum CompareType {
+        NORMAL,
+        LIST_CONTAINS
+    }
 }
