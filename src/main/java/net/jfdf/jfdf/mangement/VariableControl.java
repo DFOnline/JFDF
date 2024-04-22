@@ -3040,4 +3040,12 @@ public class VariableControl {
 
         CodeManager.instance.addCodeBlock(new SetVariableBlock("GetParticleSize").SetItems(items));
     }
+    public static void ParseMiniMessageExpression(Variable variableToSet, IText textToParse, Tags.AllowedTags allowedTagsTag, Tags.ParseLegacyColorCodes parseLegacyTag) {
+        List<CodeValue> items = new ArrayList<>();
+
+        items.add(variableToSet);
+        items.add(textToParse);
+
+        CodeManager.instance.addCodeBlock(new SetVariableBlock("ParseMiniMessageExpr").SetItems(items).SetTags(new Tag("Allowed Tags", allowedTagsTag.getJSONValue()), new Tag("Parse Legacy Color Codes", parseLegacyTag.getJSONValue())));
+    }
 }

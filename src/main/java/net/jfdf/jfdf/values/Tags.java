@@ -3503,4 +3503,35 @@ public class Tags {
             return this.jsonValue;
         }
     }
+
+    public enum AllowedTags {
+        STYLE_ONLY("Style Only"),
+        DYNAMIC("Dynamic"),
+        FULL("Full");
+
+        private final String jsonValue;
+
+        AllowedTags(final String jsonValue) {
+            this.jsonValue = jsonValue;
+        }
+
+        public String getJSONValue() {
+            return this.jsonValue;
+        }
+    }
+
+    public enum ParseLegacyColorCodes {
+        TRUE("True"),
+        FALSE("False");
+
+        private final String jsonValue;
+
+        ParseLegacyColorCodes(final String jsonValue) {
+            this.jsonValue = jsonValue;
+        }
+
+        public String getJSONValue() {
+            return this.jsonValue;
+        }
+    }
 }
