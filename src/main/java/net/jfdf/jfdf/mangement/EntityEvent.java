@@ -1,13 +1,15 @@
 package net.jfdf.jfdf.mangement;
 
+import net.jfdf.jfdf.blocks.EntityEventBlock;
+import net.jfdf.jfdf.blocks.PlayerEventBlock;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import net.jfdf.jfdf.blocks.EntityEventBlock;
 
-@Target({ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EntityEvent {
-   EntityEventBlock.Event eventType();
+    public EntityEventBlock.Event eventType();
 }

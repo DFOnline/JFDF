@@ -1,13 +1,14 @@
 package net.jfdf.jfdf.mangement;
 
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import net.jfdf.jfdf.blocks.PlayerEventBlock;
 
-@Target({ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PlayerEvent {
-   PlayerEventBlock.Event eventType();
+    public PlayerEventBlock.Event eventType();
 }

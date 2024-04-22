@@ -1,6 +1,5 @@
 package net.jfdf.addon.collections;
 
-import java.util.List;
 import net.jfdf.compiler.addon.CompilerAddons;
 import net.jfdf.compiler.data.instruction.InstructionData;
 import net.jfdf.compiler.data.instruction.TypeInstructionData;
@@ -12,230 +11,224 @@ import net.jfdf.compiler.library.References;
 import net.jfdf.compiler.util.ReferenceUtils;
 import net.jfdf.jfdf.mangement.If;
 import net.jfdf.jfdf.mangement.VariableControl;
-import net.jfdf.jfdf.values.CodeValue;
-import net.jfdf.jfdf.values.IText;
 import net.jfdf.jfdf.values.Number;
-import net.jfdf.jfdf.values.Text;
-import net.jfdf.jfdf.values.Variable;
+import net.jfdf.jfdf.values.*;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.List;
+
 class DictMethodHandler {
-   private DictMethodHandler() {
-   }
+    private DictMethodHandler() {}
 
-   public static boolean handle(String owner, String name, String descriptor, List stack) {
-      if (!owner.equals("java/util/Map") && !owner.equals("java/util/HashMap") && !owner.equals("java/util/LinkedHashMap")) {
-         return false;
-      } else {
-         int argsCount = Type.getArgumentTypes(descriptor).length;
-         IStackValue pointerStackValue = (IStackValue)stack.remove(stack.size() - argsCount - 1);
-         Variable reference;
-         if (pointerStackValue instanceof ReferencedStackValue) {
-            reference = ((ReferencedStackValue)pointerStackValue).getReference();
-         } else {
-            Variable pointer = (Variable)pointerStackValue.getTransformedValue();
+    public static boolean handle(String owner, String name, String descriptor, List<IStackValue> stack) {
+        if(!owner.equals("java/util/Map")
+                && !owner.equals("java/util/HashMap")
+                && !owner.equals("java/util/LinkedHashMap")) return false;
+
+        int argsCount = Type.getArgumentTypes(descriptor).length;
+        IStackValue pointerStackValue = stack.remove(stack.size() - argsCount - 1);
+        Variable reference;
+
+        if(pointerStackValue instanceof ReferencedStackValue) {
+            reference = ((ReferencedStackValue) pointerStackValue).getReference();
+        } else {
+            Variable pointer = (Variable) pointerStackValue.getTransformedValue();
+
             reference = new Variable("_jfdfR%var(" + pointer.getName() + ")", Variable.Scope.NORMAL);
-         }
+        }
 
-         switch (name + descriptor) {
-            case "putAll(Ljava/util/Map;)V":
-               putAll(reference, stack);
-               break;
-            case "put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
-               put(reference, stack);
-               break;
-            case "get(Ljava/lang/Object;)Ljava/lang/Object;":
-               get(reference, stack);
-               break;
-            case "remove(Ljava/lang/Object;)Ljava/lang/Object;":
-               remove1(reference, stack);
-               break;
-            case "remove(Ljava/lang/Object;Ljava/lang/Object;)Z":
-               remove2(reference, stack);
-               break;
-            case "keySet()Ljava/util/Set;":
-               keySet(reference, stack);
-               break;
-            case "values()Ljava/util/Collection;":
-               values(reference, stack);
-               break;
-            case "containsKey(Ljava/lang/Object;)Z":
-               containsKey(reference, stack);
-               break;
-            case "clear()V":
-               VariableControl.ClearDict(reference);
-               break;
-            case "size()I":
-               size(reference, stack);
-               break;
-            default:
-               throw new IllegalStateException("Unsupported Map method: " + name + descriptor);
-         }
+        switch (name + descriptor) {
+            case "putAll(Ljava/util/Map;)V" -> putAll(reference, stack);
+            case "put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;" -> put(reference, stack);
+            case "get(Ljava/lang/Object;)Ljava/lang/Object;" -> get(reference, stack);
 
-         return true;
-      }
-   }
+            case "remove(Ljava/lang/Object;)Ljava/lang/Object;" -> remove1(reference, stack);
+            case "remove(Ljava/lang/Object;Ljava/lang/Object;)Z" -> remove2(reference, stack);
 
-   private static void putAll(Variable reference, List stack) {
-      IStackValue dictionaryStackValue = (IStackValue)stack.remove(stack.size() - 1);
-      Variable dictionaryReference;
-      if (dictionaryStackValue instanceof ReferencedStackValue) {
-         dictionaryReference = ((ReferencedStackValue)dictionaryStackValue).getReference();
-      } else {
-         Variable dictionaryPointer = (Variable)dictionaryStackValue.getTransformedValue();
-         dictionaryReference = new Variable("_jfdfR%var(" + dictionaryPointer.getName() + ")", Variable.Scope.NORMAL);
-      }
+            case "keySet()Ljava/util/Set;" -> keySet(reference, stack);
+            case "values()Ljava/util/Collection;" -> values(reference, stack);
 
-      VariableControl.AppendDict(reference, dictionaryReference);
-   }
+            case "containsKey(Ljava/lang/Object;)Z" -> containsKey(reference, stack);
+            case "clear()V" -> VariableControl.ClearDict(reference);
+            case "size()I" -> size(reference, stack);
 
-   private static void put(Variable reference, List stack) {
-      CodeValue key = ((IStackValue)stack.remove(stack.size() - 2)).getTransformedValue();
-      IStackValue valueStackValue = (IStackValue)stack.remove(stack.size() - 1);
-      CodeValue value = valueStackValue.getTransformedValue();
-      if (!(key instanceof IText)) {
-         throw new IllegalStateException("Maps don't support non-text keys !");
-      } else {
-         Variable returnValue = CompilerAddons.getTempVariable();
-         VariableControl.GetDictValue(returnValue, reference, (IText)key);
-         References.decrementRefCount(returnValue);
-         ReferenceUtils.incrementIfReference(valueStackValue.getDescriptor(), value);
-         VariableControl.SetDictValue(reference, (IText)key, value);
-         stack.add(new VariableStackValue("Ljava/lang/Object;", returnValue.getName()));
-      }
-   }
+            default -> throw new IllegalStateException("Unsupported Map method: " + name + descriptor);
+        }
 
-   private static void get(Variable reference, List stack) {
-      CodeValue key = ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue();
-      if (!(key instanceof IText)) {
-         throw new IllegalStateException("Maps don't support non-text keys !");
-      } else {
-         Variable returnValue = CompilerAddons.getTempVariable();
-         VariableControl.GetDictValue(returnValue, reference, (IText)key);
-         InstructionData nextInsn = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
-         String getValueDescriptor = "Ljava/lang/Object;";
-         if (nextInsn.instructionOpcode == 192) {
-            getValueDescriptor = ((TypeInstructionData)nextInsn).type;
-            if (!getValueDescriptor.startsWith("[")) {
-               getValueDescriptor = "L" + getValueDescriptor + ";";
+        return true;
+    }
+
+    private static void putAll(Variable reference, List<IStackValue> stack) {
+        IStackValue dictionaryStackValue = stack.remove(stack.size() - 1);
+        Variable dictionaryReference;
+
+        if(dictionaryStackValue instanceof ReferencedStackValue) {
+            dictionaryReference = ((ReferencedStackValue) dictionaryStackValue).getReference();
+        } else {
+            Variable dictionaryPointer = (Variable) dictionaryStackValue.getTransformedValue();
+
+            dictionaryReference = new Variable("_jfdfR%var(" + dictionaryPointer.getName() + ")", Variable.Scope.NORMAL);
+        }
+
+        VariableControl.AppendDict(reference, dictionaryReference);
+    }
+
+    private static void put(Variable reference, List<IStackValue> stack) {
+        CodeValue key = stack.remove(stack.size() - 2).getTransformedValue();
+
+        IStackValue valueStackValue = stack.remove(stack.size() - 1);
+        CodeValue value = valueStackValue.getTransformedValue();
+
+        if(!(key instanceof IText)) {
+            throw new IllegalStateException("Maps don't support non-text keys !");
+        }
+
+        Variable returnValue = CompilerAddons.getTempVariable();
+        VariableControl.GetDictValue(returnValue, reference, (IText) key);
+        References.decrementRefCount(returnValue);
+
+        ReferenceUtils.incrementIfReference(valueStackValue.getDescriptor(), value);
+
+        VariableControl.SetDictValue(reference, (IText) key, value);
+        stack.add(new VariableStackValue("Ljava/lang/Object;", returnValue.getName()));
+    }
+
+    private static void get(Variable reference, List<IStackValue> stack) {
+        CodeValue key = stack.remove(stack.size() - 1).getTransformedValue();
+
+        if(!(key instanceof IText)) {
+            throw new IllegalStateException("Maps don't support non-text keys !");
+        }
+
+        Variable returnValue = CompilerAddons.getTempVariable();
+        VariableControl.GetDictValue(returnValue, reference, (IText) key);
+
+        InstructionData nextInsn = CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+        String getValueDescriptor = "Ljava/lang/Object;";
+
+        if(nextInsn.instructionOpcode == Opcodes.CHECKCAST) {
+            getValueDescriptor = ((TypeInstructionData) nextInsn).type;
+
+            if(!getValueDescriptor.startsWith("[")) {
+                getValueDescriptor = "L" + getValueDescriptor + ";";
             }
 
-            String var10000;
-            switch (getValueDescriptor) {
-               case "Ljava/lang/Boolean;":
-                  var10000 = "Z";
-                  break;
-               case "Ljava/lang/Byte;":
-                  var10000 = "B";
-                  break;
-               case "Ljava/lang/Short;":
-                  var10000 = "S";
-                  break;
-               case "Ljava/lang/Integer;":
-                  var10000 = "I";
-                  break;
-               case "Ljava/lang/Long;":
-                  var10000 = "J";
-                  break;
-               case "Ljava/lang/Float;":
-                  var10000 = "F";
-                  break;
-               case "Ljava/lang/Double;":
-                  var10000 = "D";
-                  break;
-               default:
-                  var10000 = getValueDescriptor;
-            }
+            getValueDescriptor = switch (getValueDescriptor) {
+                case "Ljava/lang/Boolean;" -> "Z";
+                case "Ljava/lang/Byte;"    -> "B";
+                case "Ljava/lang/Short;"   -> "S";
+                case "Ljava/lang/Integer;" -> "I";
+                case "Ljava/lang/Long;"    -> "J";
 
-            getValueDescriptor = var10000;
-         }
+                case "Ljava/lang/Float;"   -> "F";
+                case "Ljava/lang/Double;"  -> "D";
 
-         ReferenceUtils.incrementIfReference(getValueDescriptor, returnValue);
-         stack.add(new VariableStackValue("Ljava/lang/Object;", returnValue.getName()));
-      }
-   }
+                default -> getValueDescriptor;
+            };
+        }
 
-   private static void remove1(Variable reference, List stack) {
-      CodeValue key = ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue();
-      if (!(key instanceof IText)) {
-         throw new IllegalStateException("Maps don't support non-text keys !");
-      } else {
-         InstructionData nextInstruction = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
-         Variable returnValue = CompilerAddons.getTempVariable();
-         VariableControl.GetDictValue(returnValue, reference, (IText)key);
-         if (nextInstruction.instructionOpcode != 87) {
+        ReferenceUtils.incrementIfReference(getValueDescriptor, returnValue);
+        stack.add(new VariableStackValue("Ljava/lang/Object;", returnValue.getName()));
+    }
+
+    private static void remove1(Variable reference, List<IStackValue> stack) {
+        CodeValue key = stack.remove(stack.size() - 1).getTransformedValue();
+
+        if(!(key instanceof IText)) {
+            throw new IllegalStateException("Maps don't support non-text keys !");
+        }
+
+        InstructionData nextInstruction = CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+
+        Variable returnValue = CompilerAddons.getTempVariable();
+        VariableControl.GetDictValue(returnValue, reference, (IText) key);
+
+        if(nextInstruction.instructionOpcode != Opcodes.POP) {
             stack.add(new VariableStackValue("Ljava/lang/Object;", returnValue.getName()));
-         } else {
+        } else {
             References.decrementRefCount(returnValue);
             stack.add(new NumberStackValue());
-         }
+        }
 
-         VariableControl.RemoveDictEntry(reference, (IText)key);
-      }
-   }
+        VariableControl.RemoveDictEntry(reference, (IText) key);
+    }
 
-   private static void remove2(Variable reference, List stack) {
-      CodeValue key = ((IStackValue)stack.remove(stack.size() - 2)).getTransformedValue();
-      CodeValue value = ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue();
-      if (!(key instanceof IText)) {
-         throw new IllegalStateException("Maps don't support non-text keys !");
-      } else {
-         InstructionData nextInstruction = (InstructionData)CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
-         Variable returnValue;
-         if (nextInstruction.instructionOpcode != 87) {
-            returnValue = CompilerAddons.getTempVariable();
-            VariableControl.Set(returnValue, (new Number()).Set(0));
-            If.Variable.DictHasKey(reference, (IText)key, false);
-            Variable removeValue = CompilerAddons.getTempVariable();
-            VariableControl.GetDictValue(removeValue, reference, (IText)key);
-            References.decrementRefCount(removeValue);
-            VariableControl.Set(returnValue, (new Number()).Set(1));
+    private static void remove2(Variable reference, List<IStackValue> stack) {
+        CodeValue key = stack.remove(stack.size() - 2).getTransformedValue();
+        CodeValue value = stack.remove(stack.size() - 1).getTransformedValue();
+
+        if(!(key instanceof IText)) {
+            throw new IllegalStateException("Maps don't support non-text keys !");
+        }
+
+        InstructionData nextInstruction = CompilerAddons.getInstructionDataList().get(CompilerAddons.getInstructionIndex() + 1);
+
+        if(nextInstruction.instructionOpcode != Opcodes.POP) {
+            Variable returnValue = CompilerAddons.getTempVariable();
+            VariableControl.Set(returnValue, new Number().Set(0));
+
+            If.Variable.DictHasKey(reference, (IText) key, false);
+                Variable removeValue = CompilerAddons.getTempVariable();
+
+                VariableControl.GetDictValue(removeValue, reference, (IText) key);
+                References.decrementRefCount(removeValue);
+
+                VariableControl.Set(returnValue, new Number().Set(1));
             If.End();
+
             stack.add(new VariableStackValue("Z", returnValue.getName()));
-         } else {
-            If.Variable.DictHasKey(reference, (IText)key, false);
-            returnValue = CompilerAddons.getTempVariable();
-            VariableControl.GetDictValue(returnValue, reference, (IText)key);
-            References.decrementRefCount(returnValue);
+        } else {
+            If.Variable.DictHasKey(reference, (IText) key, false);
+                Variable removeValue = CompilerAddons.getTempVariable();
+
+                VariableControl.GetDictValue(removeValue, reference, (IText) key);
+                References.decrementRefCount(removeValue);
             If.End();
+
             stack.add(new NumberStackValue());
-         }
+        }
 
-         VariableControl.RemoveDictEntry(reference, (IText)key, value);
-      }
-   }
+        VariableControl.RemoveDictEntry(reference, (IText) key, value);
+    }
 
-   private static void keySet(Variable reference, List stack) {
-      ReferencedStackValue returnValue = new ListStackValue(CompilerAddons.getTempVariable());
-      VariableControl.GetDictKeys(returnValue.getReference(), reference);
-      VariableControl.InsertListValue(returnValue.getReference(), (new Number()).Set(1), (new Text()).Set("\u0000r"));
-      stack.add(returnValue);
-   }
+    private static void keySet(Variable reference, List<IStackValue> stack) {
+        ReferencedStackValue returnValue = new ListStackValue(CompilerAddons.getTempVariable());
+        VariableControl.GetDictKeys(returnValue.getReference(), reference);
+        VariableControl.InsertListValue(returnValue.getReference(), new Number().Set(1), new Text().Set("\0r"));
 
-   private static void values(Variable reference, List stack) {
-      ReferencedStackValue returnValue = new ListStackValue(CompilerAddons.getTempVariable());
-      VariableControl.GetDictValues(returnValue.getReference(), reference);
-      VariableControl.InsertListValue(returnValue.getReference(), (new Number()).Set(1), (new Text()).Set("\u0000r"));
-      stack.add(returnValue);
-   }
+        stack.add(returnValue);
+    }
 
-   private static void containsKey(Variable reference, List stack) {
-      CodeValue key = ((IStackValue)stack.remove(stack.size() - 1)).getTransformedValue();
-      if (!(key instanceof IText)) {
-         throw new IllegalStateException("Maps don't support non-text keys !");
-      } else {
-         Variable returnValue = CompilerAddons.getTempVariable();
-         VariableControl.Set(returnValue, (new Number()).Set(0));
-         If.Variable.DictHasKey(reference, (IText)key, false);
-         VariableControl.Set(returnValue, (new Number()).Set(1));
-         If.End();
-         stack.add(new VariableStackValue("Z", returnValue.getName()));
-      }
-   }
+    private static void values(Variable reference, List<IStackValue> stack) {
+        ReferencedStackValue returnValue = new ListStackValue(CompilerAddons.getTempVariable());
+        VariableControl.GetDictValues(returnValue.getReference(), reference);
+        VariableControl.InsertListValue(returnValue.getReference(), new Number().Set(1), new Text().Set("\0r"));
 
-   private static void size(Variable reference, List stack) {
-      Variable returnValue = CompilerAddons.getTempVariable();
-      VariableControl.GetDictSize(returnValue, reference);
-      stack.add(new VariableStackValue("I", returnValue.getName()));
-   }
+        stack.add(returnValue);
+    }
+
+    private static void containsKey(Variable reference, List<IStackValue> stack) {
+        CodeValue key = stack.remove(stack.size() - 1).getTransformedValue();
+
+        if(!(key instanceof IText)) {
+            throw new IllegalStateException("Maps don't support non-text keys !");
+        }
+        
+        Variable returnValue = CompilerAddons.getTempVariable();
+        VariableControl.Set(returnValue, new Number().Set(0));
+
+        If.Variable.DictHasKey(reference, (IText) key, false);
+            VariableControl.Set(returnValue, new Number().Set(1));
+        If.End();
+
+        stack.add(new VariableStackValue("Z", returnValue.getName()));
+    }
+
+    private static void size(Variable reference, List<IStackValue> stack) {
+        Variable returnValue = CompilerAddons.getTempVariable();
+        VariableControl.GetDictSize(returnValue, reference);
+
+        stack.add(new VariableStackValue("I", returnValue.getName()));
+    }
 }

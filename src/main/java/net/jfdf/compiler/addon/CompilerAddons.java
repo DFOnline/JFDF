@@ -1,164 +1,117 @@
 package net.jfdf.compiler.addon;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import net.jfdf.compiler.data.stack.Stack;
+import net.jfdf.compiler.data.instruction.InstructionData;
+import net.jfdf.compiler.data.stack.IStackValue;
 import net.jfdf.jfdf.values.Variable;
 import org.objectweb.asm.Handle;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class CompilerAddons {
-   private static final List addons = new ArrayList();
-   private static TempVariableCallback tempVariableCallback;
-   private static List instructionDataList;
-   private static int instructionIndex = -1;
+    private static final List<ICompilerAddon> addons = new ArrayList<>();
+    private static TempVariableCallback tempVariableCallback;
+    private static List<InstructionData> instructionDataList;
+    private static int instructionIndex = -1;
 
-   public static void registerAddon(ICompilerAddon addon) {
-      addons.add(addon);
-   }
+    public static void registerAddon(ICompilerAddon addon) {
+        addons.add(addon);
+    }
 
-   public static void unregisterAddon(ICompilerAddon addon) {
-      addons.remove(addon);
-   }
+    public static void unregisterAddon(ICompilerAddon addon) {
+        addons.remove(addon);
+    }
 
-   public static boolean publishInitClassEvent(String type, Stack stack) {
-      Iterator var2 = addons.iterator();
+    public static boolean publishInitClassEvent(String type, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onInitClass(type, stack)) return true;
+        }
 
-      ICompilerAddon addon;
-      do {
-         if (!var2.hasNext()) {
-            return false;
-         }
+        return false;
+    }
 
-         addon = (ICompilerAddon)var2.next();
-      } while(!addon.onInitClass(type, stack));
+    public static boolean publishInvokeConstructorEvent(String type, String descriptor, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onInvokeConstructor(type, descriptor, stack)) return true;
+        }
 
-      return true;
-   }
+        return false;
+    }
 
-   public static boolean publishInvokeConstructorEvent(String type, String descriptor, Stack stack) {
-      Iterator var3 = addons.iterator();
+    public static boolean publishInvokeDynamicEvent(String name, String descriptor, Handle methodHandle, Object[] methodArgs, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onInvokeDynamic(name, descriptor, methodHandle, methodArgs, stack)) return true;
+        }
 
-      ICompilerAddon addon;
-      do {
-         if (!var3.hasNext()) {
-            return false;
-         }
+        return false;
+    }
 
-         addon = (ICompilerAddon)var3.next();
-      } while(!addon.onInvokeConstructor(type, descriptor, stack));
+    public static boolean publishInvokeMemberEvent(String owner, String name, String descriptor, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onInvokeMember(owner, name, descriptor, stack)) return true;
+        }
 
-      return true;
-   }
+        return false;
+    }
 
-   public static boolean publishInvokeDynamicEvent(String name, String descriptor, Handle methodHandle, Object[] methodArgs, Stack stack) {
-      Iterator var5 = addons.iterator();
+    public static boolean publishInvokeStaticEvent(String owner, String name, String descriptor, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onInvokeStatic(owner, name, descriptor, stack)) return true;
+        }
 
-      ICompilerAddon addon;
-      do {
-         if (!var5.hasNext()) {
-            return false;
-         }
+        return false;
+    }
 
-         addon = (ICompilerAddon)var5.next();
-      } while(!addon.onInvokeDynamic(name, descriptor, methodHandle, methodArgs, stack));
+    public static boolean publishGetFieldEvent(boolean isStatic, String owner, String name, String descriptor, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            if(addon.onGetField(isStatic, owner, name, descriptor, stack)) return true;
+        }
 
-      return true;
-   }
+        return false;
+    }
 
-   public static boolean publishInvokeMemberEvent(String owner, String name, String descriptor, Stack stack) {
-      Iterator var4 = addons.iterator();
+    public static IfHandler publishIfEvent(String defaultType, boolean invert, List<IStackValue> stack) {
+        for (ICompilerAddon addon : addons) {
+            IfHandler ifHandler = addon.onIf(defaultType, invert, stack);
+            if(ifHandler != null) return ifHandler;
+        }
 
-      ICompilerAddon addon;
-      do {
-         if (!var4.hasNext()) {
-            return false;
-         }
+        return null;
+    }
 
-         addon = (ICompilerAddon)var4.next();
-      } while(!addon.onInvokeMember(owner, name, descriptor, stack));
+    public static void setTempVariableCallback(TempVariableCallback callback) {
+        tempVariableCallback = callback;
+    }
 
-      return true;
-   }
+    public static void setInstructionDataList(List<InstructionData> list) {
+        if(list == null) {
+            instructionDataList = null;
 
-   public static boolean publishInvokeStaticEvent(String owner, String name, String descriptor, Stack stack) {
-      Iterator var4 = addons.iterator();
+            return;
+        }
 
-      ICompilerAddon addon;
-      do {
-         if (!var4.hasNext()) {
-            return false;
-         }
+        instructionDataList = Collections.unmodifiableList(list);
+    }
 
-         addon = (ICompilerAddon)var4.next();
-      } while(!addon.onInvokeStatic(owner, name, descriptor, stack));
+    public static void setInstructionIndex(int index) {
+        instructionIndex = index;
+    }
 
-      return true;
-   }
+    public static Variable getTempVariable() {
+        return tempVariableCallback.getTempVariable();
+    }
 
-   public static boolean publishGetFieldEvent(boolean isStatic, String owner, String name, String descriptor, Stack stack) {
-      Iterator var5 = addons.iterator();
+    public static List<InstructionData> getInstructionDataList() {
+        return instructionDataList;
+    }
 
-      ICompilerAddon addon;
-      do {
-         if (!var5.hasNext()) {
-            return false;
-         }
+    public static int getInstructionIndex() {
+        return instructionIndex;
+    }
 
-         addon = (ICompilerAddon)var5.next();
-      } while(!addon.onGetField(isStatic, owner, name, descriptor, stack));
-
-      return true;
-   }
-
-   public static IfHandler publishIfEvent(String defaultType, boolean invert, Stack stack) {
-      Iterator var3 = addons.iterator();
-
-      IfHandler ifHandler;
-      do {
-         if (!var3.hasNext()) {
-            return null;
-         }
-
-         ICompilerAddon addon = (ICompilerAddon)var3.next();
-         ifHandler = addon.onIf(defaultType, invert, stack);
-      } while(ifHandler == null);
-
-      return ifHandler;
-   }
-
-   public static void setTempVariableCallback(TempVariableCallback callback) {
-      tempVariableCallback = callback;
-   }
-
-   public static void setInstructionDataList(List list) {
-      if (list == null) {
-         instructionDataList = null;
-      } else {
-         instructionDataList = Collections.unmodifiableList(list);
-      }
-   }
-
-   public static void setInstructionIndex(int index) {
-      instructionIndex = index;
-   }
-
-   public static Variable getTempVariable() {
-      return tempVariableCallback.getTempVariable();
-   }
-
-   public static List getInstructionDataList() {
-      return instructionDataList;
-   }
-
-   public static int getInstructionIndex() {
-      return instructionIndex;
-   }
-
-   @FunctionalInterface
-   public interface TempVariableCallback {
-      Variable getTempVariable();
-   }
+    @FunctionalInterface
+    public interface TempVariableCallback {
+        Variable getTempVariable();
+    }
 }

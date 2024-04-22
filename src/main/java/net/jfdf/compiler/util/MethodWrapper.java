@@ -1,136 +1,129 @@
 package net.jfdf.compiler.util;
 
+import org.objectweb.asm.Type;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import org.objectweb.asm.Type;
 
 public class MethodWrapper {
-   private final Method method;
-   private final Constructor constructor;
-   private final boolean isStaticInitalizer;
-   private final String descriptor;
+    private final Method method;
+    private final Constructor<?> constructor;
+    private final boolean isStaticInitalizer;
 
-   public MethodWrapper() {
-      this.method = null;
-      this.constructor = null;
-      this.isStaticInitalizer = true;
-      this.descriptor = "()V";
-   }
+    private final String descriptor;
 
-   public MethodWrapper(Method method) {
-      this.method = method;
-      this.constructor = null;
-      this.isStaticInitalizer = false;
-      this.descriptor = Type.getMethodDescriptor(this.method);
-   }
+    /**
+     * This is used for static initializer
+     */
+    public MethodWrapper() {
+        method = null;
+        constructor = null;
+        isStaticInitalizer = true;
 
-   public MethodWrapper(Constructor constructor) {
-      this.method = null;
-      this.constructor = constructor;
-      this.isStaticInitalizer = false;
-      this.descriptor = Type.getConstructorDescriptor(this.constructor);
-   }
+        descriptor = "()V";
+    }
 
-   public static MethodWrapper getWrapper(Class class_, String methodName, String methodDescriptor) throws NoSuchMethodException {
-      Class[] parameterTypes = (Class[])Arrays.stream(Type.getArgumentTypes(methodDescriptor)).map((type) -> {
-         try {
-            Class var10000 = switch (type.getInternalName().replace('/', '.')) {
-                case "Z" -> Boolean.TYPE;
-                case "B" -> Byte.TYPE;
-                case "S" -> Short.TYPE;
-                case "I" -> Integer.TYPE;
-                case "J" -> Long.TYPE;
-                case "F" -> Float.TYPE;
-                case "D" -> Double.TYPE;
-                case "C" -> Character.TYPE;
-                default -> null;
-                //FIXME: ?
-//               default:
-//                  var10000 = Class.forName(typeInternalName);
-            };
+    public MethodWrapper(Method method) {
+        this.method = method;
+        this.constructor = null;
+        isStaticInitalizer = false;
 
-             return var10000;
-         } catch (Exception var4) {
-            throw new RuntimeException("Something went wrong.", var4);
-         }
-      }).toArray((x$0) -> {
-         return new Class[x$0];
-      });
-      if (methodName.equals("<init>")) {
-         return new MethodWrapper(class_.getDeclaredConstructor(parameterTypes));
-      } else {
-         return methodName.equals("<clinit>") ? new MethodWrapper() : new MethodWrapper(class_.getDeclaredMethod(methodName, parameterTypes));
-      }
-   }
+        this.descriptor = Type.getMethodDescriptor(this.method);
+    }
 
-   public boolean isConstructor() {
-      return this.constructor != null;
-   }
+    public MethodWrapper(Constructor<?> constructor) {
+        this.method = null;
+        this.constructor = constructor;
+        isStaticInitalizer = false;
 
-   public boolean isStaticInitializer() {
-      return this.isStaticInitalizer;
-   }
+        this.descriptor = Type.getConstructorDescriptor(this.constructor);
+    }
 
-   public boolean isMember() {
-      if (this.method != null) {
-         return !Modifier.isStatic(this.method.getModifiers());
-      } else {
-         return this.constructor != null;
-      }
-   }
+    public static MethodWrapper getWrapper(Class<?> class_, String methodName, String methodDescriptor) throws NoSuchMethodException {
+        // Converts descriptor to parameter types of the method
+        Class<?>[] parameterTypes = Arrays.stream(Type.getArgumentTypes(methodDescriptor))
+                .map(type -> {
+                    try {
+                        String typeInternalName = type.getInternalName().replace('/', '.');
 
-   public String getName() {
-      if (this.method != null) {
-         return this.method.getName();
-      } else {
-         return this.constructor != null ? "<init>" : "<clinit>";
-      }
-   }
+                        return switch (typeInternalName) {
+                            case "Z" -> boolean.class;
+                            case "B" -> byte.class;
+                            case "S" -> short.class;
+                            case "I" -> int.class;
+                            case "J" -> long.class;
+                            case "F" -> float.class;
+                            case "D" -> double.class;
+                            case "C" -> char.class;
+                            default -> Class.forName(typeInternalName);
+                        };
+                    } catch (Exception e) {
+                        throw new RuntimeException("Something went wrong.", e);
+                    }
+                }).toArray(Class<?>[]::new);
 
-   public Annotation getAnnotation(Class annotationClass) {
-      if (this.method != null) {
-         return this.method.getAnnotation(annotationClass);
-      } else {
-         return this.constructor != null ? this.constructor.getAnnotation(annotationClass) : null;
-      }
-   }
+        if(methodName.equals("<init>")) {
+            // Gets reflection constructor from constructor's
+            // class and wraps it using MethodWrapper
+            return new MethodWrapper(class_.getDeclaredConstructor(parameterTypes));
+        } else if(methodName.equals("<clinit>")) {
+            return new MethodWrapper();
+        } else {
+            // Gets reflection method from method class and
+            // wraps it using MethodWrapper
+            return new MethodWrapper(class_.getDeclaredMethod(methodName, parameterTypes));
+        }
+    }
 
-   public int getModifiers() {
-      if (this.method != null) {
-         return this.method.getModifiers();
-      } else {
-         return this.constructor != null ? this.constructor.getModifiers() : 8;
-      }
-   }
+    public boolean isConstructor() {
+        return constructor != null;
+    }
 
-   public String getDescriptor() {
-      return this.descriptor;
-   }
+    public boolean isStaticInitializer() {
+        return isStaticInitalizer;
+    }
+    
+    public boolean isMember() {
+        if(method != null) return !Modifier.isStatic(method.getModifiers());
+        else if(constructor != null) return true;
+        else return false;
+    }
 
-   public void setAccessible(boolean accessible) {
-      if (this.method != null) {
-         this.method.setAccessible(accessible);
-      } else {
-         if (this.constructor == null) {
-            throw new IllegalStateException("Couldn't set static initializer accessible.");
-         }
+    public String getName() {
+        if(method != null) return method.getName();
+        else if(constructor != null) return "<init>";
+        else return "<clinit>";
+    }
 
-         this.constructor.setAccessible(accessible);
-      }
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        if(method != null) return method.getAnnotation(annotationClass);
+        else if(constructor != null) return constructor.getAnnotation(annotationClass);
+        else return null;
+    }
 
-   }
+    public int getModifiers() {
+        if(method != null) return method.getModifiers();
+        else if(constructor != null) return constructor.getModifiers();
+        else return Modifier.STATIC;
+    }
 
-   public Object invoke(Object obj, Object... arguments) throws InvocationTargetException, IllegalAccessException, InstantiationException {
-      if (this.method != null) {
-         return this.method.invoke(obj, arguments);
-      } else if (this.constructor != null) {
-         return this.constructor.newInstance(arguments);
-      } else {
-         throw new IllegalStateException("Couldn't invoke static initializer.");
-      }
-   }
+    public String getDescriptor() {
+        return descriptor;
+    }
+
+    public void setAccessible(boolean accessible) {
+        if(method != null) method.setAccessible(accessible);
+        else if(constructor != null) constructor.setAccessible(accessible);
+        else throw new IllegalStateException("Couldn't set static initializer accessible.");
+    }
+
+    public Object invoke(Object obj, Object... arguments) throws InvocationTargetException, IllegalAccessException, InstantiationException {
+        if(method != null) return method.invoke(obj, arguments);
+        else if(constructor != null) return constructor.newInstance(arguments);
+        else throw new IllegalStateException("Couldn't invoke static initializer.");
+    }
 }

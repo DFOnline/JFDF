@@ -5,134 +5,124 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import net.jfdf.jfdf.values.CodeValue;
 import net.jfdf.jfdf.values.Tag;
 
 public class IfVariableBlock implements CodeBlock {
-   private List items = new ArrayList();
-   private List tags = new ArrayList();
-   private boolean inverseIf = false;
-   private final String type;
+	private List<CodeValue> items = new ArrayList<CodeValue>();
+	private List<Tag> tags = new ArrayList<Tag>();
+    
+	private boolean inverseIf = false;
+    private final String type;
+	
+	public IfVariableBlock(Type type) {
+        this.type = type.getJSONValue();
+	}
 
-   public IfVariableBlock(Type type) {
-      this.type = type.getJSONValue();
-   }
+	public IfVariableBlock(Type type, boolean inverseIf) {
+		this.type = type.getJSONValue();
+		this.inverseIf = inverseIf;
+	}
 
-   public IfVariableBlock(Type type, boolean inverseIf) {
-      this.type = type.getJSONValue();
-      this.inverseIf = inverseIf;
-   }
+	public IfVariableBlock(String type, boolean inverseIf) {
+		this.type = type;
+		this.inverseIf = inverseIf;
+	}
 
-   public IfVariableBlock(String type, boolean inverseIf) {
-      this.type = type;
-      this.inverseIf = inverseIf;
-   }
+	public IfVariableBlock SetItems(final List<CodeValue> items) {
+		this.items = items;
 
-   public IfVariableBlock SetItems(List items) {
-      this.items = items;
-      return this;
-   }
+		return this;
+	}
+	
+	public IfVariableBlock SetItems(final CodeValue... items) {
+		this.items = Arrays.asList(items);
 
-   public IfVariableBlock SetItems(CodeValue... items) {
-      this.items = Arrays.asList(items);
-      return this;
-   }
+		return this;
+	}
 
-   public IfVariableBlock SetTags(Tag... tags) {
-      this.tags = Arrays.asList(tags);
-      Tag[] var2 = tags;
-      int var3 = tags.length;
+	public IfVariableBlock SetTags(final Tag... tags) {
+		this.tags = Arrays.asList(tags);
+		
+		for (final Tag tag : tags) {
+            tag.setBlock("if_var");
+            tag.setAction(type);
+		}
+		
+		return this;
+	}
+	
+	public String asJSON() {
+		String json = "{\"id\":\"block\",\"block\":\"if_var\",\"args\":{\"items\":[";
+		final List<String> itemsJSON = new ArrayList<String>();
+		
+		if(tags.size() > 9) tags = tags.subList(0, 8);
+		if(items.size() > (27 - tags.size())) items = items.subList(0, 26 - tags.size());
+		
+		for (int i = 0; i < items.size(); i++) {
+			final CodeValue codeValue = items.get(i);
+			itemsJSON.add("{\"item\":" + codeValue.asJSON() + ",\"slot\":" + i + "}");
+		}
 
-      for(int var4 = 0; var4 < var3; ++var4) {
-         Tag tag = var2[var4];
-         tag.setBlock("if_var");
-         tag.setAction(this.type);
-      }
+		for (int i = 26; i >= 27 - tags.size(); i--) {
+			Tag tag = tags.get(26 - i);
+			itemsJSON.add("{\"item\":" + tag.asJSON() + ",\"slot\":" + i + "}");
+		}
+		
+		json += String.join(",", itemsJSON);
+        json += "]},\"action\":\"" + type + (inverseIf ? "\",\"inverted\":\"NOT\"" : "\"") + "}";
+		
+		return json;
+	}
 
-      return this;
-   }
+	public enum Type {
+		EQUALS("="),
+        NOT_EQUALS("!="),
+        GREATER_THAN(">"),
+        GREATER_THAN_OR_EQUAL_TO(">="),
+        LESS_THAN("<"),
+        LESS_THAN_OR_EQUAL_TO("<="),
+        IN_RANGE("InRange"),
+        IS_NEAR("IsNear"),
+        LOC_IS_NEAR("LocIsNear"),
+        TEXT_MATCHES("TextMatches"),
+        TEXT_CONTAINS("Contains"),
+        TEXT_STARTS_WITH( "StartsWith"),
+        TEXT_ENDS_WITH( "EndsWith"),
+        EXISTS( "VarExists"),
+        VARIABLE_IS_TYPE("VarIsType"),
+        ITEM_EQUALS("ItemEquals"),
+        ITEM_HAS_TAG( "ItemHasTag"),
+        LIST_CONTAINS_VALUE("ListContains"),
+        LIST_VALUE_EQUALS("ListValueEq");
 
-   public String asJSON() {
-      String json = "{\"id\":\"block\",\"block\":\"if_var\",\"args\":{\"items\":[";
-      List itemsJSON = new ArrayList();
-      if (this.tags.size() > 9) {
-         this.tags = this.tags.subList(0, 8);
-      }
+		private final static Map<Integer, Type> values = new HashMap<Integer, Type>();
 
-      if (this.items.size() > 27 - this.tags.size()) {
-         this.items = this.items.subList(0, 26 - this.tags.size());
-      }
+		private int value;
+		private final String jsonValue;
 
-      String var10001;
-      int i;
-      for(i = 0; i < this.items.size(); ++i) {
-         CodeValue codeValue = (CodeValue)this.items.get(i);
-         var10001 = codeValue.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
-
-      for(i = 26; i >= 27 - this.tags.size(); --i) {
-         Tag tag = (Tag)this.tags.get(26 - i);
-         var10001 = tag.asJSON();
-         itemsJSON.add("{\"item\":" + var10001 + ",\"slot\":" + i + "}");
-      }
-
-      json = json + String.join(",", itemsJSON);
-      json = json + "]},\"action\":\"" + this.type + (this.inverseIf ? "\",\"inverted\":\"NOT\"" : "\"") + "}";
-      return json;
-   }
-
-   public static enum Type {
-      EQUALS("="),
-      NOT_EQUALS("!="),
-      GREATER_THAN(">"),
-      GREATER_THAN_OR_EQUAL_TO(">="),
-      LESS_THAN("<"),
-      LESS_THAN_OR_EQUAL_TO("<="),
-      IN_RANGE("InRange"),
-      IS_NEAR("IsNear"),
-      LOC_IS_NEAR("LocIsNear"),
-      TEXT_MATCHES("TextMatches"),
-      TEXT_CONTAINS("Contains"),
-      TEXT_STARTS_WITH("StartsWith"),
-      TEXT_ENDS_WITH("EndsWith"),
-      EXISTS("VarExists"),
-      VARIABLE_IS_TYPE("VarIsType"),
-      ITEM_EQUALS("ItemEquals"),
-      ITEM_HAS_TAG("ItemHasTag"),
-      LIST_CONTAINS_VALUE("ListContains"),
-      LIST_VALUE_EQUALS("ListValueEq");
-
-      private static final Map values = new HashMap();
-      private int value;
-      private final String jsonValue;
-
-      private Type(String jsonValue) {
-         this.jsonValue = jsonValue;
-      }
-
-      public static Type valueOf(int type) {
-         return (Type)values.get(type);
-      }
-
-      public int getValue() {
-         return this.value;
-      }
-
-      public String getJSONValue() {
-         return this.jsonValue;
-      }
-
-      static {
-         Type[] var0 = values();
-         int var1 = var0.length;
-
-         for(int var2 = 0; var2 < var1; ++var2) {
-            Type type = var0[var2];
-            type.value = values.size();
-            values.put(type.getValue(), type);
-         }
-
-      }
-   }
+		Type(final String jsonValue) {
+			this.jsonValue = jsonValue;
+		}
+	
+		static {
+			for (Type type : Type.values()) {
+				type.value = values.size();
+				values.put(type.getValue(), type);
+			}
+		}
+	
+		public static Type valueOf(int type) {
+			return values.get(type);
+		}
+	
+		public int getValue() {
+			return value;
+		}
+	
+		public String getJSONValue() {
+			return jsonValue;
+		}
+	}
 }

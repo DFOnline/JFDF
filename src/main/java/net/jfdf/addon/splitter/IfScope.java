@@ -1,96 +1,97 @@
 package net.jfdf.addon.splitter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import net.jfdf.jfdf.blocks.CodeBlock;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class IfScope extends Scope {
-   private int elseIndex;
+    private int elseIndex = -1;
 
-   public IfScope(CodeBlock ifBlock, CodeBlock ifStart, List content, CodeBlock[] elseBlocks, List elseContent, CodeBlock ifEnd) {
-      super(new ArrayList());
-      this.elseIndex = -1;
-      if (elseBlocks != null ^ elseContent != null) {
-         throw new IllegalStateException("Both of else blocks and else content should be null or not null.");
-      } else {
-         this.totalLength = 4;
-         if (elseBlocks != null) {
-            if (elseBlocks.length != 3) {
-               throw new IllegalStateException("Else blocks array should have 3 blocks only.");
+    public IfScope(CodeBlock ifBlock, CodeBlock ifStart, List<CodeBlock> content, CodeBlock[] elseBlocks, List<CodeBlock> elseContent, CodeBlock ifEnd) {
+        super(new ArrayList<>());
+
+        if (elseBlocks != null ^ elseContent != null) {
+            throw new IllegalStateException("Both of else blocks and else content should be null or not null.");
+        }
+
+        totalLength = 4;
+        if(elseBlocks != null) {
+            if(elseBlocks.length == 3) {
+                totalLength += 4;
+            } else {
+                throw new IllegalStateException("Else blocks array should have 3 blocks only.");
             }
+        }
 
-            this.totalLength += 4;
-         }
+        this.content.add(ifBlock);
+        this.content.add(ifStart);
 
-         this.content.add(ifBlock);
-         this.content.add(ifStart);
-         this.content.addAll(content);
-         if (elseBlocks != null) {
-            this.elseIndex = this.content.size();
+        this.content.addAll(content);
+
+        if(elseBlocks != null) {
+            elseIndex = this.content.size();
+
             this.content.addAll(Arrays.asList(elseBlocks));
             this.content.addAll(elseContent);
-         }
+        }
 
-         this.content.add(ifEnd);
-         Iterator var7 = content.iterator();
+        this.content.add(ifEnd);
 
-         CodeBlock block;
-         while(var7.hasNext()) {
-            block = (CodeBlock)var7.next();
-            if (block instanceof Scope) {
-               this.totalLength += ((Scope)block).totalLength;
+        for(CodeBlock block : content) {
+            if(block instanceof Scope) {
+                totalLength += ((Scope) block).totalLength;
             } else {
-               this.totalLength += 2;
+                totalLength += 2;
             }
-         }
+        }
 
-         if (elseContent != null) {
-            var7 = elseContent.iterator();
-
-            while(var7.hasNext()) {
-               block = (CodeBlock)var7.next();
-               if (block instanceof Scope) {
-                  this.totalLength += ((Scope)block).totalLength;
-               } else {
-                  this.totalLength += 2;
-               }
+        if(elseContent != null) {
+            for (CodeBlock block : elseContent) {
+                if (block instanceof Scope) {
+                    totalLength += ((Scope) block).totalLength;
+                } else {
+                    totalLength += 2;
+                }
             }
-         }
+        }
+    }
 
-      }
-   }
+    public IfScope(CodeBlock ifBlock, CodeBlock ifStart, List<CodeBlock> content, CodeBlock ifEnd) {
+        this(ifBlock, ifStart, content, null, null, ifEnd);
+    }
 
-   public IfScope(CodeBlock ifBlock, CodeBlock ifStart, List content, CodeBlock ifEnd) {
-      this(ifBlock, ifStart, content, (CodeBlock[])null, (List)null, ifEnd);
-   }
+    @Override
+    public List<CodeBlock> getContent() {
+        if(elseIndex != -1) {
+            return content.subList(2, elseIndex);
+        }
 
-   public List getContent() {
-      return this.elseIndex != -1 ? this.content.subList(2, this.elseIndex) : this.content.subList(2, this.content.size() - 1);
-   }
+        return content.subList(2, content.size() - 1);
+    }
 
-   public List getElseContent() {
-      return this.content.subList(this.elseIndex + 3, this.content.size() - 1);
-   }
+    public List<CodeBlock> getElseContent() {
+        return content.subList(elseIndex + 3, content.size() - 1);
+    }
 
-   public List getStart() {
-      return this.content.subList(0, 2);
-   }
+    public List<CodeBlock> getStart() {
+        return content.subList(0, 2);
+    }
 
-   public List getElse() {
-      return this.content.subList(this.elseIndex, this.elseIndex + 3);
-   }
+    public List<CodeBlock> getElse() {
+        return content.subList(elseIndex, elseIndex + 3);
+    }
 
-   public CodeBlock getEnd() {
-      return (CodeBlock)this.content.get(this.content.size() - 1);
-   }
+    public CodeBlock getEnd() {
+        return content.get(content.size() - 1);
+    }
 
-   public int getMinimumLength() {
-      return this.elseIndex == -1 ? 6 : 12;
-   }
+    public int getMinimumLength() {
+        return elseIndex == -1 ? 6 : 12;
+    }
 
-   public boolean hasElse() {
-      return this.elseIndex != -1;
-   }
+    public boolean hasElse() {
+        return elseIndex != -1;
+    }
 }

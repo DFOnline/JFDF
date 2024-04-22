@@ -1,75 +1,88 @@
 package net.jfdf.compiler.data.stack;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import net.jfdf.compiler.util.ReferenceUtils;
 import net.jfdf.jfdf.blocks.SetVariableBlock;
 import net.jfdf.jfdf.mangement.CodeManager;
 import net.jfdf.jfdf.mangement.Repeat;
 import net.jfdf.jfdf.mangement.VariableControl;
-import net.jfdf.jfdf.values.CodeValue;
-import net.jfdf.jfdf.values.GameValue;
-import net.jfdf.jfdf.values.INumber;
+import net.jfdf.jfdf.values.*;
 import net.jfdf.jfdf.values.Number;
-import net.jfdf.jfdf.values.Text;
-import net.jfdf.jfdf.values.Variable;
 import net.jfdf.transformer.util.NumberMath;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class ArrayStackValue extends ReferencedStackValue {
-   private final String descriptor;
-   private final List dataList;
+    private final String descriptor;
+    private final List<CodeValue> dataList;
 
-   public ArrayStackValue(String descriptor, IStackValue length, String methodName, int blockOperatorIndex) {
-      super(methodName, blockOperatorIndex);
-      this.descriptor = "[" + descriptor;
-      if (!(length instanceof NumberStackValue)) {
-         VariableControl.CreateList(this.reference, ReferenceUtils.isReferenceDescriptor(descriptor) ? (new Text()).Set("\u0000r") : (new Text()).Set("\u0000p"));
-         Repeat.MultipleTimes((Variable)null, (INumber)length.getTransformedValue());
-         VariableControl.AppendValue(this.reference, (new Number()).Set(0));
-         Repeat.End();
-         this.dataList = null;
-      } else {
-         int arrayLength = ((NumberStackValue)length).getJavaValue().intValue();
-         this.dataList = Arrays.asList();
-         Collections.fill(this.dataList, (new Number()).Set(0));
-         this.dataList.set(0, this.reference);
-         this.dataList.set(1, ReferenceUtils.isReferenceDescriptor(descriptor) ? (new Text()).Set("\u0000r") : (new Text()).Set("\u0000p"));
-         CodeManager.instance.addCodeBlock((new SetVariableBlock("CreateList")).SetItems(this.dataList.subList(0, Math.min(27, this.dataList.size()))));
+    public ArrayStackValue(String descriptor, IStackValue length, String methodName, int blockOperatorIndex) {
+        super(methodName, blockOperatorIndex);
 
-         for(int i = 27; i < this.dataList.size(); i += 27) {
-            this.dataList.set(i, this.reference);
-            CodeManager.instance.addCodeBlock((new SetVariableBlock("AppendValue")).SetItems(this.dataList.subList(i, Math.min(i + 27, this.dataList.size()))));
-         }
+        this.descriptor = "[" + descriptor;
 
-      }
-   }
+        if(length instanceof NumberStackValue) {
+            int arrayLength = ((NumberStackValue) length).getJavaValue().intValue();
 
-   public ArrayStackValue(Variable array, String methodName, int blockOperatorIndex) {
-      super(methodName, blockOperatorIndex);
-      this.descriptor = "[Ljava/lang/Object;";
-      VariableControl.Set(this.reference, array);
-      this.dataList = null;
-   }
+            // Makes a new array
+            dataList = Arrays.asList(new CodeValue[arrayLength + 1 + (int) Math.max(1, Math.ceil(arrayLength / 26.0f))]);
 
-   public ArrayStackValue(Variable variable, Variable array) {
-      super(variable);
-      this.descriptor = "[Ljava/lang/Object;";
-      VariableControl.Set(this.reference, array);
-      this.dataList = null;
-   }
+            // Fills the array with 0s then sets first block argument to reference's variable
+            Collections.fill(dataList, new Number().Set(0));
+            dataList.set(0, reference);
+            dataList.set(1, ReferenceUtils.isReferenceDescriptor(descriptor) ? new Text().Set("\0r") : new Text().Set("\0p"));
 
-   public void set(IStackValue indexValue, CodeValue value) {
-      if (this.dataList != null && indexValue instanceof NumberStackValue && !(value instanceof Variable) && !(value instanceof GameValue)) {
-         int index = ((NumberStackValue)indexValue).getJavaValue().intValue() + 1;
-         this.dataList.set(index + (int)Math.floor((double)((float)index / 26.0F)) + 1, value);
-      } else {
-         VariableControl.SetListValue(this.reference, NumberMath.add((INumber)indexValue.getTransformedValue(), (new Number()).Set(2)), value);
-      }
+            // Add the blocks
+            CodeManager.instance.addCodeBlock(new SetVariableBlock("CreateList").SetItems(dataList.subList(0, Math.min(27, dataList.size()))));
+            for (int i = 27; i < dataList.size(); i += 27) {
+                dataList.set(i, reference);
+                CodeManager.instance.addCodeBlock(new SetVariableBlock("AppendValue").SetItems(dataList.subList(i, Math.min(i + 27, dataList.size()))));
+            }
+            return;
+        }
 
-   }
+        VariableControl.CreateList(reference, ReferenceUtils.isReferenceDescriptor(descriptor) ? new Text().Set("\0r") : new Text().Set("\0p"));
+        Repeat.MultipleTimes(null, (INumber) length.getTransformedValue());
+        VariableControl.AppendValue(reference, new Number().Set(0));
+        Repeat.End();
 
-   public String getDescriptor() {
-      return this.descriptor;
-   }
+        dataList = null;
+    }
+
+    public ArrayStackValue(Variable array, String methodName, int blockOperatorIndex) {
+        super(methodName, blockOperatorIndex);
+        this.descriptor = "[Ljava/lang/Object;";
+
+        VariableControl.Set(reference, array);
+        dataList = null;
+    }
+
+    public ArrayStackValue(Variable variable, Variable array) {
+        super(variable);
+        this.descriptor = "[Ljava/lang/Object;";
+
+        VariableControl.Set(reference, array);
+        dataList = null;
+    }
+
+    public void set(IStackValue indexValue, CodeValue value) {
+        if(dataList != null && indexValue instanceof NumberStackValue
+                && !(value instanceof Variable) && !(value instanceof GameValue)) {
+            int index = ((NumberStackValue) indexValue).getJavaValue().intValue() + 1;
+
+            dataList.set(index + (int)Math.floor(index / 26.0f) + 1, value);
+        } else {
+            VariableControl.SetListValue(
+                    reference,
+                    NumberMath.add((INumber) indexValue.getTransformedValue(), new Number().Set(2)),
+                    value
+            );
+        }
+    }
+
+    @Override
+    public String getDescriptor() {
+        return this.descriptor;
+    }
 }
