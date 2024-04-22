@@ -66,7 +66,9 @@ public class Variable implements IItem, ILocation, INumber, IParticle, IPotion, 
 		GLOBAL(0, "unsaved"),
 		GAME(0, "unsaved"),
 		SAVED(1, "saved"),
-		LOCAL(2, "local");
+		LOCAL(2, "local"),
+		THREAD(2, "local"),
+		LINE(3, "line");
 
 		private final static Map<Integer, Scope> values = new HashMap<Integer, Scope>();
 
